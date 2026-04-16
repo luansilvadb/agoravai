@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.aider*

@@ -1,0 +1,113 @@
+# generated: 2026-04-14
+# last_updated: 2026-04-15
+# project: agora-vai
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: D:\agora-vai\_bmad-output\implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-04-14
+last_updated: 2026-04-15
+project: agora-vai
+project_key: NOKEY
+tracking_system: file-system
+story_location: D:\agora-vai\_bmad-output\implementation-artifacts
+
+development_status:
+  # Epic 1: Auth & Onboarding
+  epic-1: done
+  1-1-database-schema-and-middleware-foundation: done
+  1-2-registro-and-login: done
+  1-3-recuperacao-de-senha-and-logout: done
+  1-4-convites-de-usuario: done
+  1-5-fluxo-aha-pos-cadastro: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Users & RBAC
+  epic-2: done
+  2-1-gestao-de-usuarios-crud-e-papeis: done
+  2-2-gestao-de-empresa: done
+  2-3-gestao-de-categorias: done
+  epic-2-retrospective: optional
+
+  # Epic 3: Contas a Pagar
+  epic-3: done
+  3-1-criar-conta-a-pagar: done
+  3-2-editar-e-excluir-conta-a-pagar: done
+  3-3-marcar-como-paga: done
+  3-4-lista-de-contas-a-pagar-com-filtros: done
+  epic-3-retrospective: optional
+
+  # Epic 4: Contas a Receber
+  epic-4: done
+  4-1-criar-conta-a-receber: done
+  4-2-editar-e-excluir-conta-a-receber: done
+  4-3-marcar-como-recebida: done
+  4-4-lista-de-contas-a-receber-com-filtros: done
+  epic-4-retrospective: optional
+
+  # Epic 5: Fluxo de Caixa
+  epic-5: done
+  5-1-visualizar-fluxo-de-caixa: done
+  5-2-filtrar-fluxo-de-caixa-por-periodo: done
+  epic-5-retrospective: optional
+
+  # Epic 6: Dashboard
+  epic-6: done
+  6-1-dashboard-saldo-e-contas-a-vencer: done
+  6-2-dashboard-top-categorias: done
+  epic-6-retrospective: optional
+
+  # Epic 7: Relatórios & Exportação
+  epic-7: in-progress
+  7-1-gerar-extrato-por-periodo: done
+  7-2-exportar-extrato-em-csv: review
+  7-3-exportar-extrato-em-pdf: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Auditoria & Conformidade
+  epic-8: backlog
+  8-1-visualizar-audit-log: backlog
+  8-2-soft-delete-e-access-log: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Super Admin
+  epic-9: backlog
+  9-1-lista-de-tenants: backlog
+  9-2-metricas-e-intervencao-de-tenant: backlog
+  epic-9-retrospective: optional
+
+  # Epic 10: Acessibilidade & Responsividade
+  epic-10: backlog
+  10-1-responsividade-mobile-first: backlog
+  10-2-acessibilidade-wcag-2-1-aa: backlog
+  10-3-espacamento-e-design-visual: backlog
+  epic-10-retrospective: optional
