@@ -1,28 +1,28 @@
 installation:
   version: 6.3.0
-  installDate: 2026-04-15T00:57:46.496Z
-  lastUpdated: 2026-04-15T23:16:30.371Z
+  installDate: 2026-04-16T02:49:58.343Z
+  lastUpdated: 2026-04-16T02:49:58.343Z
 modules:
   - name: core
     version: 6.3.0
-    installDate: 2026-04-15T00:57:43.460Z
-    lastUpdated: 2026-04-15T23:16:30.363Z
+    installDate: 2026-04-16T02:49:52.162Z
+    lastUpdated: 2026-04-16T02:49:58.323Z
     source: built-in
     npmPackage: null
     repoUrl: null
   - name: bmm
     version: 6.3.0
-    installDate: 2026-04-15T00:57:43.711Z
-    lastUpdated: 2026-04-15T23:16:30.364Z
+    installDate: 2026-04-16T02:49:52.421Z
+    lastUpdated: 2026-04-16T02:49:58.324Z
     source: built-in
     npmPackage: null
     repoUrl: null
   - name: tea
     version: 1.7.2
-    installDate: 2026-04-15T00:57:44.955Z
-    lastUpdated: 2026-04-15T23:16:30.371Z
+    installDate: 2026-04-16T02:49:54.781Z
+    lastUpdated: 2026-04-16T02:49:58.343Z
     source: external
     npmPackage: bmad-method-test-architecture-enterprise
     repoUrl: https://github.com/bmad-code-org/bmad-method-test-architecture-enterprise
 ides:
-  - kilo
+  - windsurf
