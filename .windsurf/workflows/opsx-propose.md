@@ -20,14 +20,22 @@ When ready to implement, run /opsx:apply
 
 **Steps**
 
-1. **If no input provided, ask what they want to build**
+**Steps**
 
-   Use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
+0. **Understand the change**
+   If no input provided, use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
    > "What change do you want to work on? Describe what you want to build or fix."
-
-   From their description, derive a kebab-case name (e.g., "add user authentication" → `add-user-auth`).
-
+   From their description (or your initial prompt), derive a kebab-case name (e.g., "add user authentication" → `add-user-auth`).
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
+
+1. **Gather Architectural Context (Micro-RAG)**
+   Before running `openspec new change`, you MUST discover the relevant project skills.
+   Run the following command in the terminal using the full description of what is being built:
+   ```bash
+   node scripts/rag-skills.mjs "<description of what the user wants to build>"
+   ```
+   Wait for the command to finish. It will generate a file named `.openspec-context.md`.
+   **CRITICAL**: When you reach Step 4 and start creating the `proposal.md` and `design.md` artifacts, you MUST read the content of `.openspec-context.md` and apply its rules strictly to the design of the new change.
 
 2. **Create the change directory**
    ```bash

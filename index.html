@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Sistema PDV - Ponto de Venda Responsivo">
+    <meta name="theme-color" content="#4f46e5">
+    <title>PDV - Sistema de Vendas</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar Navigation (Desktop) -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <i data-lucide="store" class="logo-icon"></i>
+                <span class="logo-text">PDV System</span>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="pos">
+                    <i data-lucide="shopping-cart"></i>
+                    <span>Vendas</span>
+                </button>
+                <button class="nav-item" data-view="products">
+                    <i data-lucide="package"></i>
+                    <span>Produtos</span>
+                </button>
+                <button class="nav-item" data-view="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-view="history">
+                    <i data-lucide="history"></i>
+                    <span>Histórico</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Mobile Header -->
+        <header class="mobile-header">
+            <button id="menu-toggle" class="menu-toggle" aria-label="Menu">
+                <i data-lucide="menu"></i>
+            </button>
+            <span class="header-title">PDV System</span>
+            <div class="header-actions">
+                <button id="cart-toggle" class="cart-toggle" aria-label="Carrinho">
+                    <i data-lucide="shopping-cart"></i>
+                    <span class="cart-badge" id="cart-badge">0</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content" class="main-content">
+            <!-- Views will be rendered here -->
+        </main>
+
+        <!-- Mobile Cart Drawer -->
+        <div id="cart-drawer" class="cart-drawer">
+            <div class="cart-drawer-header">
+                <h3>Carrinho</h3>
+                <button id="close-cart" class="close-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div id="cart-drawer-content" class="cart-drawer-content">
+                <!-- Cart content rendered here -->
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div id="mobile-menu" class="mobile-menu">
+            <div class="mobile-menu-header">
+                <span>Menu</span>
+                <button id="close-menu" class="close-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <nav class="mobile-nav">
+                <button class="mobile-nav-item" data-view="pos">
+                    <i data-lucide="shopping-cart"></i>
+                    <span>Vendas</span>
+                </button>
+                <button class="mobile-nav-item" data-view="products">
+                    <i data-lucide="package"></i>
+                    <span>Produtos</span>
+                </button>
+                <button class="mobile-nav-item" data-view="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="mobile-nav-item" data-view="history">
+                    <i data-lucide="history"></i>
+                    <span>Histórico</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Overlay -->
+        <div id="overlay" class="overlay"></div>
+
+        <!-- Toast Container -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/models/Product.js"></script>
+    <script src="js/models/CartItem.js"></script>
+    <script src="js/models/Cart.js"></script>
+    <script src="js/models/Sale.js"></script>
+    <script src="js/services/StorageService.js"></script>
+    <script src="js/services/CartManager.js"></script>
+    <script src="js/views/ProductListView.js"></script>
+    <script src="js/views/ProductFormView.js"></script>
+    <script src="js/views/CartView.js"></script>
+    <script src="js/views/CheckoutView.js"></script>
+    <script src="js/views/DashboardView.js"></script>
+    <script src="js/views/SaleHistoryView.js"></script>
+    <script src="js/views/PosView.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

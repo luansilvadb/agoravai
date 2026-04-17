@@ -18,7 +18,7 @@ async function runRAG() {
     console.log(`🧠 [Micro-RAG] Carregando modelo local e analisando intenção: "${prompt}"...`);
     
     // Carrega o modelo de embedding local (baixa apenas na 1ª vez, ~22MB)
-    const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
+    const extractor = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', {
         quantized: true, // Usa versão super leve
     });
 
