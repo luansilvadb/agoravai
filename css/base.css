@@ -98,6 +98,13 @@ img, picture, video, canvas, svg {
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Glassmorphism - Sidebar Premium */
+  --sidebar-glass-bg: rgba(255, 255, 255, 0.75);
+  --sidebar-glass-border: rgba(255, 255, 255, 0.5);
+  --sidebar-blur: blur(20px) saturate(180%);
+  --sidebar-glow-primary: 0 0 20px hsl(217 91% 60% / 0.3);
+  --sidebar-glow-primary-strong: 0 0 30px hsl(217 91% 60% / 0.5), 0 0 60px hsl(217 91% 60% / 0.3);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   
   /* Border Radius */
@@ -132,6 +139,12 @@ img, picture, video, canvas, svg {
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  
+  /* Glassmorphism Dark */
+  --sidebar-glass-bg: rgba(30, 35, 48, 0.8);
+  --sidebar-glass-border: rgba(255, 255, 255, 0.08);
+  --sidebar-glow-primary: 0 0 20px hsl(217 91% 60% / 0.4);
+  --sidebar-glow-primary-strong: 0 0 30px hsl(217 91% 60% / 0.6), 0 0 60px hsl(217 91% 60% / 0.4);
 }
 
 /* ============================================

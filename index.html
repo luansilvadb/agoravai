@@ -19,41 +19,44 @@
 </head>
 <body>
   <!-- Navigation - Desktop: Sidebar, Mobile: Bottom bar -->
-  <nav class="navigation" role="navigation" aria-label="Menu principal">
+  <nav class="navigation" role="navigation" aria-label="Menu principal" id="sidebar">
     <div class="nav-brand">
       <div class="nav-logo">
         <i data-lucide="wallet"></i>
       </div>
       <span class="nav-title">Finanças</span>
+      <button class="nav-collapse-btn" id="sidebar-toggle" aria-label="Recolher menu" title="Recolher/Expandir">
+        <i data-lucide="panel-left-close"></i>
+      </button>
     </div>
     
     <ul class="nav-menu">
       <li>
-        <a href="#dashboard" class="nav-link active" data-section="dashboard">
+        <a href="#dashboard" class="nav-link active" data-section="dashboard" data-tooltip="Dashboard">
           <i data-lucide="layout-dashboard"></i>
           <span>Dashboard</span>
         </a>
       </li>
       <li>
-        <a href="#transactions" class="nav-link" data-section="transactions">
+        <a href="#transactions" class="nav-link" data-section="transactions" data-tooltip="Transações">
           <i data-lucide="receipt"></i>
           <span>Transações</span>
         </a>
       </li>
       <li>
-        <a href="#categories" class="nav-link" data-section="categories">
+        <a href="#categories" class="nav-link" data-section="categories" data-tooltip="Categorias">
           <i data-lucide="tags"></i>
           <span>Categorias</span>
         </a>
       </li>
       <li>
-        <a href="#reports" class="nav-link" data-section="reports">
+        <a href="#reports" class="nav-link" data-section="reports" data-tooltip="Relatórios">
           <i data-lucide="bar-chart-3"></i>
           <span>Relatórios</span>
         </a>
       </li>
       <li>
-        <a href="#settings" class="nav-link" data-section="settings">
+        <a href="#settings" class="nav-link" data-section="settings" data-tooltip="Configurações">
           <i data-lucide="settings"></i>
           <span>Configurações</span>
         </a>

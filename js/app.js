@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize theme
   initTheme();
   
+  // Initialize sidebar collapse
+  initSidebar();
+  
   // Set today's date as default in date inputs
   const dateInputs = document.querySelectorAll('input[type="date"]');
   const today = new Date().toISOString().split('T')[0];
@@ -82,6 +85,54 @@ function updateActiveNav(activeLink) {
     link.classList.remove('active');
   });
   activeLink.classList.add('active');
+}
+
+/* ============================================
+   SIDEBAR COLLAPSE/EXPAND
+   ============================================ */
+
+function initSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('sidebar-toggle');
+  const main = document.querySelector('.main');
+  
+  if (!sidebar || !toggleBtn) return;
+  
+  // Restore saved state
+  const savedState = localStorage.getItem('finance_app_sidebar_collapsed');
+  if (savedState === 'true') {
+    sidebar.classList.add('collapsed');
+    if (main) main.classList.add('collapsed');
+    updateSidebarIcon(true);
+  }
+  
+  // Toggle on button click
+  toggleBtn.addEventListener('click', () => {
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    if (main) main.classList.toggle('collapsed', isCollapsed);
+    
+    // Save state
+    localStorage.setItem('finance_app_sidebar_collapsed', isCollapsed);
+    
+    // Update icon
+    updateSidebarIcon(isCollapsed);
+    
+    // Trigger resize event for charts
+    window.dispatchEvent(new Event('resize'));
+  });
+}
+
+function updateSidebarIcon(isCollapsed) {
+  const icon = document.querySelector('#sidebar-toggle i');
+  if (!icon) return;
+  
+  // Update icon data-lucide attribute
+  icon.setAttribute('data-lucide', isCollapsed ? 'panel-left-open' : 'panel-left-close');
+  
+  // Re-create icon
+  if (window.lucide) {
+    lucide.createIcons();
+  }
 }
 
 /* ============================================
