@@ -1,21 +1,20 @@
-// rag-skills.mjs
 import fs from 'fs';
 import path from 'path';
 import { pipeline, cos_sim } from '@xenova/transformers';
 
-const SKILLS_DIR = '.windsurf/skills';
-const OUTPUT_FILE = '.openspec-context.md';
+const SKILLS_DIR = '.rag/context';
+const OUTPUT_FILE = '.rag/research/skills.md';
 const THRESHOLD = 0.3; // Quão rigorosa deve ser a similaridade (0 a 1)
 
 async function runRAG() {
     const prompt = process.argv.slice(2).join(' ');
     
     if (!prompt) {
-        console.error("❌ Erro: Forneça a intenção. Ex: node rag-skills.mjs 'criar tela de login'");
+        console.error("Erro: Forneça a intenção. Ex: node rag-skills.mjs 'criar tela de login'");
         process.exit(1);
     }
 
-    console.log(`🧠 [Micro-RAG] Carregando modelo local e analisando intenção: "${prompt}"...`);
+    console.log(`Carregando modelo local e analisando intenção: "${prompt}"...`);
     
     // Carrega o modelo de embedding local (baixa apenas na 1ª vez, ~22MB)
     const extractor = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', {
@@ -43,7 +42,7 @@ async function runRAG() {
     scanDir(SKILLS_DIR);
 
     if (skillFiles.length === 0) {
-        console.log("⚠️ Nenhuma skill encontrada no diretório.");
+        console.log("Nenhuma skill encontrada no diretório.");
         process.exit(0);
     }
 
@@ -70,7 +69,7 @@ async function runRAG() {
     const topResults = results.slice(0, 3); // Pega o Top 3
 
     if (topResults.length === 0) {
-        console.log("ℹ️ Nenhuma skill específica detectada para esta tarefa.");
+        console.log("Nenhuma skill específica detectada para esta tarefa.");
         fs.writeFileSync(OUTPUT_FILE, "Nenhuma skill específica necessária para esta tarefa.\n");
         process.exit(0);
     }
@@ -80,12 +79,12 @@ async function runRAG() {
     finalContext += `O RAG detectou que as seguintes diretrizes são vitais para a tarefa: "${prompt}"\n\n`;
 
     for (const res of topResults) {
-        console.log(`✅ Skill conectada: ${res.filePath} (Score: ${res.similarity.toFixed(2)})`);
+        console.log(`Skill conectada: ${res.filePath} (Score: ${res.similarity.toFixed(2)})`);
         finalContext += `## ORIGEM: ${res.filePath}\n${res.content}\n\n---\n\n`;
     }
 
     fs.writeFileSync(OUTPUT_FILE, finalContext);
-    console.log(`🚀 [Micro-RAG] Arquivo ${OUTPUT_FILE} gerado com sucesso!`);
+    console.log(`Arquivo ${OUTPUT_FILE} gerado com sucesso!`);
 }
 
 runRAG().catch(console.error);
