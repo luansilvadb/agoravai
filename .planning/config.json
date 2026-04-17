@@ -1,0 +1,11 @@
+{
+  "mode": "yolo",
+  "granularity": "coarse",
+  "parallel": true,
+  "commit_docs": true,
+  "research": true,
+  "plan_check": true,
+  "verifier": true,
+  "ai_profile": "balanced",
+  "project_type": "greenfield"
+}
