@@ -1,157 +1,6 @@
 # CONTEXTO DE SKILLS INJETADAS PELO RAG
 
-O RAG detectou que as seguintes diretrizes são vitais para a tarefa: "quero melhorar a interface meu meu app deixando mais moderno"
-
-## ORIGEM: .rag\context\accessibility\SKILL.md
----
-name: accessibility
-description: Design, implement, and audit inclusive digital products using WCAG 2.2 Level AA
-  standards. Use this skill to generate semantic ARIA for Web and accessibility traits for Web and Native platforms (iOS/Android).
-origin: ECC
----
-
-# Accessibility (WCAG 2.2)
-
-This skill ensures that digital interfaces are Perceivable, Operable, Understandable, and Robust (POUR) for all users, including those using screen readers, switch controls, or keyboard navigation. It focuses on the technical implementation of WCAG 2.2 success criteria.
-
-## When to Use
-
-- Defining UI component specifications for Web, iOS, or Android.
-- Auditing existing code for accessibility barriers or compliance gaps.
-- Implementing new WCAG 2.2 standards like Target Size (Minimum) and Focus Appearance.
-- Mapping high-level design requirements to technical attributes (ARIA roles, traits, hints).
-
-## Core Concepts
-
-- **POUR Principles**: The foundation of WCAG (Perceivable, Operable, Understandable, Robust).
-- **Semantic Mapping**: Using native elements over generic containers to provide built-in accessibility.
-- **Accessibility Tree**: The representation of the UI that assistive technologies actually "read."
-- **Focus Management**: Controlling the order and visibility of the keyboard/screen reader cursor.
-- **Labeling & Hints**: Providing context through `aria-label`, `accessibilityLabel`, and `contentDescription`.
-
-## How It Works
-
-### Step 1: Identify the Component Role
-
-Determine the functional purpose (e.g., Is this a button, a link, or a tab?). Use the most semantic native element available before resorting to custom roles.
-
-### Step 2: Define Perceivable Attributes
-
-- Ensure text contrast meets **4.5:1** (normal) or **3:1** (large/UI).
-- Add text alternatives for non-text content (images, icons).
-- Implement responsive reflow (up to 400% zoom without loss of function).
-
-### Step 3: Implement Operable Controls
-
-- Ensure a minimum **24x24 CSS pixel** target size (WCAG 2.2 SC 2.5.8).
-- Verify all interactive elements are reachable via keyboard and have a visible focus indicator (SC 2.4.11).
-- Provide single-pointer alternatives for dragging movements.
-
-### Step 4: Ensure Understandable Logic
-
-- Use consistent navigation patterns.
-- Provide descriptive error messages and suggestions for correction (SC 3.3.3).
-- Implement "Redundant Entry" (SC 3.3.7) to prevent asking for the same data twice.
-
-### Step 5: Verify Robust Compatibility
-
-- Use correct `Name, Role, Value` patterns.
-- Implement `aria-live` or live regions for dynamic status updates.
-
-## Accessibility Architecture Diagram
-
-```mermaid
-flowchart TD
-  UI["UI Component"] --> Platform{Platform?}
-  Platform -->|Web| ARIA["WAI-ARIA + HTML5"]
-  Platform -->|iOS| SwiftUI["Accessibility Traits + Labels"]
-  Platform -->|Android| Compose["Semantics + ContentDesc"]
-
-  ARIA --> AT["Assistive Technology (Screen Readers, Switches)"]
-  SwiftUI --> AT
-  Compose --> AT
-```
-
-## Cross-Platform Mapping
-
-| Feature            | Web (HTML/ARIA)          | iOS (SwiftUI)                        | Android (Compose)                                           |
-| :----------------- | :----------------------- | :----------------------------------- | :---------------------------------------------------------- |
-| **Primary Label**  | `aria-label` / `<label>` | `.accessibilityLabel()`              | `contentDescription`                                        |
-| **Secondary Hint** | `aria-describedby`       | `.accessibilityHint()`               | `Modifier.semantics { stateDescription = ... }`             |
-| **Action Role**    | `role="button"`          | `.accessibilityAddTraits(.isButton)` | `Modifier.semantics { role = Role.Button }`                 |
-| **Live Updates**   | `aria-live="polite"`     | `.accessibilityLiveRegion(.polite)`  | `Modifier.semantics { liveRegion = LiveRegionMode.Polite }` |
-
-## Examples
-
-### Web: Accessible Search
-
-```html
-<form role="search">
-  <label for="search-input" class="sr-only">Search products</label>
-  <input type="search" id="search-input" placeholder="Search..." />
-  <button type="submit" aria-label="Submit Search">
-    <svg aria-hidden="true">...</svg>
-  </button>
-</form>
-```
-
-### iOS: Accessible Action Button
-
-```swift
-Button(action: deleteItem) {
-    Image(systemName: "trash")
-}
-.accessibilityLabel("Delete item")
-.accessibilityHint("Permanently removes this item from your list")
-.accessibilityAddTraits(.isButton)
-```
-
-### Android: Accessible Toggle
-
-```kotlin
-Switch(
-    checked = isEnabled,
-    onCheckedChange = { onToggle() },
-    modifier = Modifier.semantics {
-        contentDescription = "Enable notifications"
-    }
-)
-```
-
-## Anti-Patterns to Avoid
-
-- **Div-Buttons**: Using a `<div>` or `<span>` for a click event without adding a role and keyboard support.
-- **Color-Only Meaning**: Indicating an error or status _only_ with a color change (e.g., turning a border red).
-- **Uncontained Modal Focus**: Modals that don't trap focus, allowing keyboard users to navigate background content while the modal is open. Focus must be contained _and_ escapable via the `Escape` key or an explicit close button (WCAG SC 2.1.2).
-- **Redundant Alt Text**: Using "Image of..." or "Picture of..." in alt text (screen readers already announce the role "Image").
-
-## Best Practices Checklist
-
-- [ ] Interactive elements meet the **24x24px** (Web) or **44x44pt** (Native) target size.
-- [ ] Focus indicators are clearly visible and high-contrast.
-- [ ] Modals **contain focus** while open, and release it cleanly on close (`Escape` key or close button).
-- [ ] Dropdowns and menus restore focus to the trigger element on close.
-- [ ] Forms provide text-based error suggestions.
-- [ ] All icon-only buttons have a descriptive text label.
-- [ ] Content reflows properly when text is scaled.
-
-## References
-
-- [WCAG 2.2 Guidelines](https://www.w3.org/TR/WCAG22/)
-- [WAI-ARIA Authoring Practices](https://www.w3.org/TR/wai-aria-practices/)
-- [iOS Accessibility Programming Guide](https://developer.apple.com/documentation/accessibility)
-- [iOS Human Interface Guidelines - Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)
-- [Android Accessibility Developer Guide](https://developer.android.com/guide/topics/ui/accessibility)
-
-## Related Skills
-
-- `frontend-patterns`
-- `frontend-design`
-- `liquid-glass-design`
-- `swiftui-patterns`
-
-
----
+O RAG detectou que as seguintes diretrizes são vitais para a tarefa: "melhorar UI UX tela POS carrinho altura total desktop responsivo layout grid"
 
 ## ORIGEM: .rag\context\frontend-design\SKILL.md
 ---
@@ -303,470 +152,800 @@ Before delivering:
 
 ---
 
-## ORIGEM: .rag\context\tdd-workflow\SKILL.md
+## ORIGEM: .rag\context\frontend-patterns\SKILL.md
 ---
-name: tdd-workflow
-description: Use this skill when writing new features, fixing bugs, or refactoring code. Enforces test-driven development with 80%+ coverage including unit, integration, and E2E tests.
+name: frontend-patterns
+description: Frontend development patterns for React, Next.js, state management, performance optimization, and UI best practices.
 origin: ECC
 ---
 
-# Test-Driven Development Workflow
+# Frontend Development Patterns
 
-This skill ensures all code development follows TDD principles with comprehensive test coverage.
+Modern frontend patterns for React, Next.js, and performant user interfaces.
 
 ## When to Activate
 
-- Writing new features or functionality
-- Fixing bugs or issues
-- Refactoring existing code
-- Adding API endpoints
-- Creating new components
+- Building React components (composition, props, rendering)
+- Managing state (useState, useReducer, Zustand, Context)
+- Implementing data fetching (SWR, React Query, server components)
+- Optimizing performance (memoization, virtualization, code splitting)
+- Working with forms (validation, controlled inputs, Zod schemas)
+- Handling client-side routing and navigation
+- Building accessible, responsive UI patterns
 
-## Core Principles
+## Component Patterns
 
-### 1. Tests BEFORE Code
-ALWAYS write tests first, then implement code to make tests pass.
-
-### 2. Coverage Requirements
-- Minimum 80% coverage (unit + integration + E2E)
-- All edge cases covered
-- Error scenarios tested
-- Boundary conditions verified
-
-### 3. Test Types
-
-#### Unit Tests
-- Individual functions and utilities
-- Component logic
-- Pure functions
-- Helpers and utilities
-
-#### Integration Tests
-- API endpoints
-- Database operations
-- Service interactions
-- External API calls
-
-#### E2E Tests (Playwright)
-- Critical user flows
-- Complete workflows
-- Browser automation
-- UI interactions
-
-### 4. Git Checkpoints
-- If the repository is under Git, create a checkpoint commit after each TDD stage
-- Do not squash or rewrite these checkpoint commits until the workflow is complete
-- Each checkpoint commit message must describe the stage and the exact evidence captured
-- Count only commits created on the current active branch for the current task
-- Do not treat commits from other branches, earlier unrelated work, or distant branch history as valid checkpoint evidence
-- Before treating a checkpoint as satisfied, verify that the commit is reachable from the current `HEAD` on the active branch and belongs to the current task sequence
-- The preferred compact workflow is:
-  - one commit for failing test added and RED validated
-  - one commit for minimal fix applied and GREEN validated
-  - one optional commit for refactor complete
-- Separate evidence-only commits are not required if the test commit clearly corresponds to RED and the fix commit clearly corresponds to GREEN
-
-## TDD Workflow Steps
-
-### Step 1: Write User Journeys
-```
-As a [role], I want to [action], so that [benefit]
-
-Example:
-As a user, I want to search for markets semantically,
-so that I can find relevant markets even without exact keywords.
-```
-
-### Step 2: Generate Test Cases
-For each user journey, create comprehensive test cases:
+### Composition Over Inheritance
 
 ```typescript
-describe('Semantic Search', () => {
-  it('returns relevant markets for query', async () => {
-    // Test implementation
-  })
+// PASS: GOOD: Component composition
+interface CardProps {
+  children: React.ReactNode
+  variant?: 'default' | 'outlined'
+}
 
-  it('handles empty query gracefully', async () => {
-    // Test edge case
-  })
+export function Card({ children, variant = 'default' }: CardProps) {
+  return <div className={`card card-${variant}`}>{children}</div>
+}
 
-  it('falls back to substring search when Redis unavailable', async () => {
-    // Test fallback behavior
-  })
+export function CardHeader({ children }: { children: React.ReactNode }) {
+  return <div className="card-header">{children}</div>
+}
 
-  it('sorts results by similarity score', async () => {
-    // Test sorting logic
-  })
-})
+export function CardBody({ children }: { children: React.ReactNode }) {
+  return <div className="card-body">{children}</div>
+}
+
+// Usage
+<Card>
+  <CardHeader>Title</CardHeader>
+  <CardBody>Content</CardBody>
+</Card>
 ```
 
-### Step 3: Run Tests (They Should Fail)
-```bash
-npm test
-# Tests should fail - we haven't implemented yet
-```
-
-This step is mandatory and is the RED gate for all production changes.
-
-Before modifying business logic or other production code, you must verify a valid RED state via one of these paths:
-- Runtime RED:
-  - The relevant test target compiles successfully
-  - The new or changed test is actually executed
-  - The result is RED
-- Compile-time RED:
-  - The new test newly instantiates, references, or exercises the buggy code path
-  - The compile failure is itself the intended RED signal
-- In either case, the failure is caused by the intended business-logic bug, undefined behavior, or missing implementation
-- The failure is not caused only by unrelated syntax errors, broken test setup, missing dependencies, or unrelated regressions
-
-A test that was only written but not compiled and executed does not count as RED.
-
-Do not edit production code until this RED state is confirmed.
-
-If the repository is under Git, create a checkpoint commit immediately after this stage is validated.
-Recommended commit message format:
-- `test: add reproducer for <feature or bug>`
-- This commit may also serve as the RED validation checkpoint if the reproducer was compiled and executed and failed for the intended reason
-- Verify that this checkpoint commit is on the current active branch before continuing
-
-### Step 4: Implement Code
-Write minimal code to make tests pass:
+### Compound Components
 
 ```typescript
-// Implementation guided by tests
-export async function searchMarkets(query: string) {
-  // Implementation here
+interface TabsContextValue {
+  activeTab: string
+  setActiveTab: (tab: string) => void
+}
+
+const TabsContext = createContext<TabsContextValue | undefined>(undefined)
+
+export function Tabs({ children, defaultTab }: {
+  children: React.ReactNode
+  defaultTab: string
+}) {
+  const [activeTab, setActiveTab] = useState(defaultTab)
+
+  return (
+    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+      {children}
+    </TabsContext.Provider>
+  )
+}
+
+export function TabList({ children }: { children: React.ReactNode }) {
+  return <div className="tab-list">{children}</div>
+}
+
+export function Tab({ id, children }: { id: string, children: React.ReactNode }) {
+  const context = useContext(TabsContext)
+  if (!context) throw new Error('Tab must be used within Tabs')
+
+  return (
+    <button
+      className={context.activeTab === id ? 'active' : ''}
+      onClick={() => context.setActiveTab(id)}
+    >
+      {children}
+    </button>
+  )
+}
+
+// Usage
+<Tabs defaultTab="overview">
+  <TabList>
+    <Tab id="overview">Overview</Tab>
+    <Tab id="details">Details</Tab>
+  </TabList>
+</Tabs>
+```
+
+### Render Props Pattern
+
+```typescript
+interface DataLoaderProps<T> {
+  url: string
+  children: (data: T | null, loading: boolean, error: Error | null) => React.ReactNode
+}
+
+export function DataLoader<T>({ url, children }: DataLoaderProps<T>) {
+  const [data, setData] = useState<T | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    fetch(url)
+      .then(res => res.json())
+      .then(setData)
+      .catch(setError)
+      .finally(() => setLoading(false))
+  }, [url])
+
+  return <>{children(data, loading, error)}</>
+}
+
+// Usage
+<DataLoader<Market[]> url="/api/markets">
+  {(markets, loading, error) => {
+    if (loading) return <Spinner />
+    if (error) return <Error error={error} />
+    return <MarketList markets={markets!} />
+  }}
+</DataLoader>
+```
+
+## Custom Hooks Patterns
+
+### State Management Hook
+
+```typescript
+export function useToggle(initialValue = false): [boolean, () => void] {
+  const [value, setValue] = useState(initialValue)
+
+  const toggle = useCallback(() => {
+    setValue(v => !v)
+  }, [])
+
+  return [value, toggle]
+}
+
+// Usage
+const [isOpen, toggleOpen] = useToggle()
+```
+
+### Async Data Fetching Hook
+
+```typescript
+interface UseQueryOptions<T> {
+  onSuccess?: (data: T) => void
+  onError?: (error: Error) => void
+  enabled?: boolean
+}
+
+export function useQuery<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  options?: UseQueryOptions<T>
+) {
+  const [data, setData] = useState<T | null>(null)
+  const [error, setError] = useState<Error | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const refetch = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const result = await fetcher()
+      setData(result)
+      options?.onSuccess?.(result)
+    } catch (err) {
+      const error = err as Error
+      setError(error)
+      options?.onError?.(error)
+    } finally {
+      setLoading(false)
+    }
+  }, [fetcher, options])
+
+  useEffect(() => {
+    if (options?.enabled !== false) {
+      refetch()
+    }
+  }, [key, refetch, options?.enabled])
+
+  return { data, error, loading, refetch }
+}
+
+// Usage
+const { data: markets, loading, error, refetch } = useQuery(
+  'markets',
+  () => fetch('/api/markets').then(r => r.json()),
+  {
+    onSuccess: data => console.log('Fetched', data.length, 'markets'),
+    onError: err => console.error('Failed:', err)
+  }
+)
+```
+
+### Debounce Hook
+
+```typescript
+export function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => clearTimeout(handler)
+  }, [value, delay])
+
+  return debouncedValue
+}
+
+// Usage
+const [searchQuery, setSearchQuery] = useState('')
+const debouncedQuery = useDebounce(searchQuery, 500)
+
+useEffect(() => {
+  if (debouncedQuery) {
+    performSearch(debouncedQuery)
+  }
+}, [debouncedQuery])
+```
+
+## State Management Patterns
+
+### Context + Reducer Pattern
+
+```typescript
+interface State {
+  markets: Market[]
+  selectedMarket: Market | null
+  loading: boolean
+}
+
+type Action =
+  | { type: 'SET_MARKETS'; payload: Market[] }
+  | { type: 'SELECT_MARKET'; payload: Market }
+  | { type: 'SET_LOADING'; payload: boolean }
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'SET_MARKETS':
+      return { ...state, markets: action.payload }
+    case 'SELECT_MARKET':
+      return { ...state, selectedMarket: action.payload }
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload }
+    default:
+      return state
+  }
+}
+
+const MarketContext = createContext<{
+  state: State
+  dispatch: Dispatch<Action>
+} | undefined>(undefined)
+
+export function MarketProvider({ children }: { children: React.ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, {
+    markets: [],
+    selectedMarket: null,
+    loading: false
+  })
+
+  return (
+    <MarketContext.Provider value={{ state, dispatch }}>
+      {children}
+    </MarketContext.Provider>
+  )
+}
+
+export function useMarkets() {
+  const context = useContext(MarketContext)
+  if (!context) throw new Error('useMarkets must be used within MarketProvider')
+  return context
 }
 ```
 
-If the repository is under Git, stage the minimal fix now but defer the checkpoint commit until GREEN is validated in Step 5.
+## Performance Optimization
 
-### Step 5: Run Tests Again
-```bash
-npm test
-# Tests should now pass
-```
+### Memoization
 
-Rerun the same relevant test target after the fix and confirm the previously failing test is now GREEN.
-
-Only after a valid GREEN result may you proceed to refactor.
-
-If the repository is under Git, create a checkpoint commit immediately after GREEN is validated.
-Recommended commit message format:
-- `fix: <feature or bug>`
-- The fix commit may also serve as the GREEN validation checkpoint if the same relevant test target was rerun and passed
-- Verify that this checkpoint commit is on the current active branch before continuing
-
-### Step 6: Refactor
-Improve code quality while keeping tests green:
-- Remove duplication
-- Improve naming
-- Optimize performance
-- Enhance readability
-
-If the repository is under Git, create a checkpoint commit immediately after refactoring is complete and tests remain green.
-Recommended commit message format:
-- `refactor: clean up after <feature or bug> implementation`
-- Verify that this checkpoint commit is on the current active branch before considering the TDD cycle complete
-
-### Step 7: Verify Coverage
-```bash
-npm run test:coverage
-# Verify 80%+ coverage achieved
-```
-
-## Testing Patterns
-
-### Unit Test Pattern (Jest/Vitest)
 ```typescript
-import { render, screen, fireEvent } from '@testing-library/react'
-import { Button } from './Button'
+// PASS: useMemo for expensive computations
+const sortedMarkets = useMemo(() => {
+  return markets.sort((a, b) => b.volume - a.volume)
+}, [markets])
 
-describe('Button Component', () => {
-  it('renders with correct text', () => {
-    render(<Button>Click me</Button>)
-    expect(screen.getByText('Click me')).toBeInTheDocument()
-  })
+// PASS: useCallback for functions passed to children
+const handleSearch = useCallback((query: string) => {
+  setSearchQuery(query)
+}, [])
 
-  it('calls onClick when clicked', () => {
-    const handleClick = jest.fn()
-    render(<Button onClick={handleClick}>Click</Button>)
-
-    fireEvent.click(screen.getByRole('button'))
-
-    expect(handleClick).toHaveBeenCalledTimes(1)
-  })
-
-  it('is disabled when disabled prop is true', () => {
-    render(<Button disabled>Click</Button>)
-    expect(screen.getByRole('button')).toBeDisabled()
-  })
+// PASS: React.memo for pure components
+export const MarketCard = React.memo<MarketCardProps>(({ market }) => {
+  return (
+    <div className="market-card">
+      <h3>{market.name}</h3>
+      <p>{market.description}</p>
+    </div>
+  )
 })
 ```
 
-### API Integration Test Pattern
+### Code Splitting & Lazy Loading
+
 ```typescript
-import { NextRequest } from 'next/server'
-import { GET } from './route'
+import { lazy, Suspense } from 'react'
 
-describe('GET /api/markets', () => {
-  it('returns markets successfully', async () => {
-    const request = new NextRequest('http://localhost/api/markets')
-    const response = await GET(request)
-    const data = await response.json()
+// PASS: Lazy load heavy components
+const HeavyChart = lazy(() => import('./HeavyChart'))
+const ThreeJsBackground = lazy(() => import('./ThreeJsBackground'))
 
-    expect(response.status).toBe(200)
-    expect(data.success).toBe(true)
-    expect(Array.isArray(data.data)).toBe(true)
+export function Dashboard() {
+  return (
+    <div>
+      <Suspense fallback={<ChartSkeleton />}>
+        <HeavyChart data={data} />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <ThreeJsBackground />
+      </Suspense>
+    </div>
+  )
+}
+```
+
+### Virtualization for Long Lists
+
+```typescript
+import { useVirtualizer } from '@tanstack/react-virtual'
+
+export function VirtualMarketList({ markets }: { markets: Market[] }) {
+  const parentRef = useRef<HTMLDivElement>(null)
+
+  const virtualizer = useVirtualizer({
+    count: markets.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 100,  // Estimated row height
+    overscan: 5  // Extra items to render
   })
 
-  it('validates query parameters', async () => {
-    const request = new NextRequest('http://localhost/api/markets?limit=invalid')
-    const response = await GET(request)
+  return (
+    <div ref={parentRef} style={{ height: '600px', overflow: 'auto' }}>
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          position: 'relative'
+        }}
+      >
+        {virtualizer.getVirtualItems().map(virtualRow => (
+          <div
+            key={virtualRow.index}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: `${virtualRow.size}px`,
+              transform: `translateY(${virtualRow.start}px)`
+            }}
+          >
+            <MarketCard market={markets[virtualRow.index]} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+```
 
-    expect(response.status).toBe(400)
+## Form Handling Patterns
+
+### Controlled Form with Validation
+
+```typescript
+interface FormData {
+  name: string
+  description: string
+  endDate: string
+}
+
+interface FormErrors {
+  name?: string
+  description?: string
+  endDate?: string
+}
+
+export function CreateMarketForm() {
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    description: '',
+    endDate: ''
   })
 
-  it('handles database errors gracefully', async () => {
-    // Mock database failure
-    const request = new NextRequest('http://localhost/api/markets')
-    // Test error handling
-  })
-})
-```
+  const [errors, setErrors] = useState<FormErrors>({})
 
-### E2E Test Pattern (Playwright)
-```typescript
-import { test, expect } from '@playwright/test'
+  const validate = (): boolean => {
+    const newErrors: FormErrors = {}
 
-test('user can search and filter markets', async ({ page }) => {
-  // Navigate to markets page
-  await page.goto('/')
-  await page.click('a[href="/markets"]')
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required'
+    } else if (formData.name.length > 200) {
+      newErrors.name = 'Name must be under 200 characters'
+    }
 
-  // Verify page loaded
-  await expect(page.locator('h1')).toContainText('Markets')
+    if (!formData.description.trim()) {
+      newErrors.description = 'Description is required'
+    }
 
-  // Search for markets
-  await page.fill('input[placeholder="Search markets"]', 'election')
+    if (!formData.endDate) {
+      newErrors.endDate = 'End date is required'
+    }
 
-  // Wait for debounce and results
-  await page.waitForTimeout(600)
-
-  // Verify search results displayed
-  const results = page.locator('[data-testid="market-card"]')
-  await expect(results).toHaveCount(5, { timeout: 5000 })
-
-  // Verify results contain search term
-  const firstResult = results.first()
-  await expect(firstResult).toContainText('election', { ignoreCase: true })
-
-  // Filter by status
-  await page.click('button:has-text("Active")')
-
-  // Verify filtered results
-  await expect(results).toHaveCount(3)
-})
-
-test('user can create a new market', async ({ page }) => {
-  // Login first
-  await page.goto('/creator-dashboard')
-
-  // Fill market creation form
-  await page.fill('input[name="name"]', 'Test Market')
-  await page.fill('textarea[name="description"]', 'Test description')
-  await page.fill('input[name="endDate"]', '2025-12-31')
-
-  // Submit form
-  await page.click('button[type="submit"]')
-
-  // Verify success message
-  await expect(page.locator('text=Market created successfully')).toBeVisible()
-
-  // Verify redirect to market page
-  await expect(page).toHaveURL(/\/markets\/test-market/)
-})
-```
-
-## Test File Organization
-
-```
-src/
-├── components/
-│   ├── Button/
-│   │   ├── Button.tsx
-│   │   ├── Button.test.tsx          # Unit tests
-│   │   └── Button.stories.tsx       # Storybook
-│   └── MarketCard/
-│       ├── MarketCard.tsx
-│       └── MarketCard.test.tsx
-├── app/
-│   └── api/
-│       └── markets/
-│           ├── route.ts
-│           └── route.test.ts         # Integration tests
-└── e2e/
-    ├── markets.spec.ts               # E2E tests
-    ├── trading.spec.ts
-    └── auth.spec.ts
-```
-
-## Mocking External Services
-
-### Supabase Mock
-```typescript
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({
-          data: [{ id: 1, name: 'Test Market' }],
-          error: null
-        }))
-      }))
-    }))
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
-}))
-```
 
-### Redis Mock
-```typescript
-jest.mock('@/lib/redis', () => ({
-  searchMarketsByVector: jest.fn(() => Promise.resolve([
-    { slug: 'test-market', similarity_score: 0.95 }
-  ])),
-  checkRedisHealth: jest.fn(() => Promise.resolve({ connected: true }))
-}))
-```
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-### OpenAI Mock
-```typescript
-jest.mock('@/lib/openai', () => ({
-  generateEmbedding: jest.fn(() => Promise.resolve(
-    new Array(1536).fill(0.1) // Mock 1536-dim embedding
-  ))
-}))
-```
+    if (!validate()) return
 
-## Test Coverage Verification
-
-### Run Coverage Report
-```bash
-npm run test:coverage
-```
-
-### Coverage Thresholds
-```json
-{
-  "jest": {
-    "coverageThresholds": {
-      "global": {
-        "branches": 80,
-        "functions": 80,
-        "lines": 80,
-        "statements": 80
-      }
+    try {
+      await createMarket(formData)
+      // Success handling
+    } catch (error) {
+      // Error handling
     }
   }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={formData.name}
+        onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+        placeholder="Market name"
+      />
+      {errors.name && <span className="error">{errors.name}</span>}
+
+      {/* Other fields */}
+
+      <button type="submit">Create Market</button>
+    </form>
+  )
 }
 ```
 
-## Common Testing Mistakes to Avoid
+## Error Boundary Pattern
 
-### FAIL: WRONG: Testing Implementation Details
 ```typescript
-// Don't test internal state
-expect(component.state.count).toBe(5)
+interface ErrorBoundaryState {
+  hasError: boolean
+  error: Error | null
+}
+
+export class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  state: ErrorBoundaryState = {
+    hasError: false,
+    error: null
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error boundary caught:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-fallback">
+          <h2>Something went wrong</h2>
+          <p>{this.state.error?.message}</p>
+          <button onClick={() => this.setState({ hasError: false })}>
+            Try again
+          </button>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
+// Usage
+<ErrorBoundary>
+  <App />
+</ErrorBoundary>
 ```
 
-### PASS: CORRECT: Test User-Visible Behavior
+## Animation Patterns
+
+### Framer Motion Animations
+
 ```typescript
-// Test what users see
-expect(screen.getByText('Count: 5')).toBeInTheDocument()
+import { motion, AnimatePresence } from 'framer-motion'
+
+// PASS: List animations
+export function AnimatedMarketList({ markets }: { markets: Market[] }) {
+  return (
+    <AnimatePresence>
+      {markets.map(market => (
+        <motion.div
+          key={market.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <MarketCard market={market} />
+        </motion.div>
+      ))}
+    </AnimatePresence>
+  )
+}
+
+// PASS: Modal animations
+export function Modal({ isOpen, onClose, children }: ModalProps) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+          <motion.div
+            className="modal-content"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          >
+            {children}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+}
 ```
 
-### FAIL: WRONG: Brittle Selectors
+## Accessibility Patterns
+
+### Keyboard Navigation
+
 ```typescript
-// Breaks easily
-await page.click('.css-class-xyz')
+export function Dropdown({ options, onSelect }: DropdownProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setActiveIndex(i => Math.min(i + 1, options.length - 1))
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setActiveIndex(i => Math.max(i - 1, 0))
+        break
+      case 'Enter':
+        e.preventDefault()
+        onSelect(options[activeIndex])
+        setIsOpen(false)
+        break
+      case 'Escape':
+        setIsOpen(false)
+        break
+    }
+  }
+
+  return (
+    <div
+      role="combobox"
+      aria-expanded={isOpen}
+      aria-haspopup="listbox"
+      onKeyDown={handleKeyDown}
+    >
+      {/* Dropdown implementation */}
+    </div>
+  )
+}
 ```
 
-### PASS: CORRECT: Semantic Selectors
+### Focus Management
+
 ```typescript
-// Resilient to changes
-await page.click('button:has-text("Submit")')
-await page.click('[data-testid="submit-button"]')
+export function Modal({ isOpen, onClose, children }: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      // Save currently focused element
+      previousFocusRef.current = document.activeElement as HTMLElement
+
+      // Focus modal
+      modalRef.current?.focus()
+    } else {
+      // Restore focus when closing
+      previousFocusRef.current?.focus()
+    }
+  }, [isOpen])
+
+  return isOpen ? (
+    <div
+      ref={modalRef}
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
+      onKeyDown={e => e.key === 'Escape' && onClose()}
+    >
+      {children}
+    </div>
+  ) : null
+}
 ```
 
-### FAIL: WRONG: No Test Isolation
-```typescript
-// Tests depend on each other
-test('creates user', () => { /* ... */ })
-test('updates same user', () => { /* depends on previous test */ })
-```
+**Remember**: Modern frontend patterns enable maintainable, performant user interfaces. Choose patterns that fit your project complexity.
 
-### PASS: CORRECT: Independent Tests
-```typescript
-// Each test sets up its own data
-test('creates user', () => {
-  const user = createTestUser()
-  // Test logic
-})
-
-test('updates user', () => {
-  const user = createTestUser()
-  // Update logic
-})
-```
-
-## Continuous Testing
-
-### Watch Mode During Development
-```bash
-npm test -- --watch
-# Tests run automatically on file changes
-```
-
-### Pre-Commit Hook
-```bash
-# Runs before every commit
-npm test && npm run lint
-```
-
-### CI/CD Integration
-```yaml
-# GitHub Actions
-- name: Run Tests
-  run: npm test -- --coverage
-- name: Upload Coverage
-  uses: codecov/codecov-action@v3
-```
-
-## Best Practices
-
-1. **Write Tests First** - Always TDD
-2. **One Assert Per Test** - Focus on single behavior
-3. **Descriptive Test Names** - Explain what's tested
-4. **Arrange-Act-Assert** - Clear test structure
-5. **Mock External Dependencies** - Isolate unit tests
-6. **Test Edge Cases** - Null, undefined, empty, large
-7. **Test Error Paths** - Not just happy paths
-8. **Keep Tests Fast** - Unit tests < 50ms each
-9. **Clean Up After Tests** - No side effects
-10. **Review Coverage Reports** - Identify gaps
-
-## Success Metrics
-
-- 80%+ code coverage achieved
-- All tests passing (green)
-- No skipped or disabled tests
-- Fast test execution (< 30s for unit tests)
-- E2E tests cover critical user flows
-- Tests catch bugs before production
 
 ---
 
-**Remember**: Tests are not optional. They are the safety net that enables confident refactoring, rapid development, and production reliability.
+## ORIGEM: .rag\context\accessibility\SKILL.md
+---
+name: accessibility
+description: Design, implement, and audit inclusive digital products using WCAG 2.2 Level AA
+  standards. Use this skill to generate semantic ARIA for Web and accessibility traits for Web and Native platforms (iOS/Android).
+origin: ECC
+---
+
+# Accessibility (WCAG 2.2)
+
+This skill ensures that digital interfaces are Perceivable, Operable, Understandable, and Robust (POUR) for all users, including those using screen readers, switch controls, or keyboard navigation. It focuses on the technical implementation of WCAG 2.2 success criteria.
+
+## When to Use
+
+- Defining UI component specifications for Web, iOS, or Android.
+- Auditing existing code for accessibility barriers or compliance gaps.
+- Implementing new WCAG 2.2 standards like Target Size (Minimum) and Focus Appearance.
+- Mapping high-level design requirements to technical attributes (ARIA roles, traits, hints).
+
+## Core Concepts
+
+- **POUR Principles**: The foundation of WCAG (Perceivable, Operable, Understandable, Robust).
+- **Semantic Mapping**: Using native elements over generic containers to provide built-in accessibility.
+- **Accessibility Tree**: The representation of the UI that assistive technologies actually "read."
+- **Focus Management**: Controlling the order and visibility of the keyboard/screen reader cursor.
+- **Labeling & Hints**: Providing context through `aria-label`, `accessibilityLabel`, and `contentDescription`.
+
+## How It Works
+
+### Step 1: Identify the Component Role
+
+Determine the functional purpose (e.g., Is this a button, a link, or a tab?). Use the most semantic native element available before resorting to custom roles.
+
+### Step 2: Define Perceivable Attributes
+
+- Ensure text contrast meets **4.5:1** (normal) or **3:1** (large/UI).
+- Add text alternatives for non-text content (images, icons).
+- Implement responsive reflow (up to 400% zoom without loss of function).
+
+### Step 3: Implement Operable Controls
+
+- Ensure a minimum **24x24 CSS pixel** target size (WCAG 2.2 SC 2.5.8).
+- Verify all interactive elements are reachable via keyboard and have a visible focus indicator (SC 2.4.11).
+- Provide single-pointer alternatives for dragging movements.
+
+### Step 4: Ensure Understandable Logic
+
+- Use consistent navigation patterns.
+- Provide descriptive error messages and suggestions for correction (SC 3.3.3).
+- Implement "Redundant Entry" (SC 3.3.7) to prevent asking for the same data twice.
+
+### Step 5: Verify Robust Compatibility
+
+- Use correct `Name, Role, Value` patterns.
+- Implement `aria-live` or live regions for dynamic status updates.
+
+## Accessibility Architecture Diagram
+
+```mermaid
+flowchart TD
+  UI["UI Component"] --> Platform{Platform?}
+  Platform -->|Web| ARIA["WAI-ARIA + HTML5"]
+  Platform -->|iOS| SwiftUI["Accessibility Traits + Labels"]
+  Platform -->|Android| Compose["Semantics + ContentDesc"]
+
+  ARIA --> AT["Assistive Technology (Screen Readers, Switches)"]
+  SwiftUI --> AT
+  Compose --> AT
+```
+
+## Cross-Platform Mapping
+
+| Feature            | Web (HTML/ARIA)          | iOS (SwiftUI)                        | Android (Compose)                                           |
+| :----------------- | :----------------------- | :----------------------------------- | :---------------------------------------------------------- |
+| **Primary Label**  | `aria-label` / `<label>` | `.accessibilityLabel()`              | `contentDescription`                                        |
+| **Secondary Hint** | `aria-describedby`       | `.accessibilityHint()`               | `Modifier.semantics { stateDescription = ... }`             |
+| **Action Role**    | `role="button"`          | `.accessibilityAddTraits(.isButton)` | `Modifier.semantics { role = Role.Button }`                 |
+| **Live Updates**   | `aria-live="polite"`     | `.accessibilityLiveRegion(.polite)`  | `Modifier.semantics { liveRegion = LiveRegionMode.Polite }` |
+
+## Examples
+
+### Web: Accessible Search
+
+```html
+<form role="search">
+  <label for="search-input" class="sr-only">Search products</label>
+  <input type="search" id="search-input" placeholder="Search..." />
+  <button type="submit" aria-label="Submit Search">
+    <svg aria-hidden="true">...</svg>
+  </button>
+</form>
+```
+
+### iOS: Accessible Action Button
+
+```swift
+Button(action: deleteItem) {
+    Image(systemName: "trash")
+}
+.accessibilityLabel("Delete item")
+.accessibilityHint("Permanently removes this item from your list")
+.accessibilityAddTraits(.isButton)
+```
+
+### Android: Accessible Toggle
+
+```kotlin
+Switch(
+    checked = isEnabled,
+    onCheckedChange = { onToggle() },
+    modifier = Modifier.semantics {
+        contentDescription = "Enable notifications"
+    }
+)
+```
+
+## Anti-Patterns to Avoid
+
+- **Div-Buttons**: Using a `<div>` or `<span>` for a click event without adding a role and keyboard support.
+- **Color-Only Meaning**: Indicating an error or status _only_ with a color change (e.g., turning a border red).
+- **Uncontained Modal Focus**: Modals that don't trap focus, allowing keyboard users to navigate background content while the modal is open. Focus must be contained _and_ escapable via the `Escape` key or an explicit close button (WCAG SC 2.1.2).
+- **Redundant Alt Text**: Using "Image of..." or "Picture of..." in alt text (screen readers already announce the role "Image").
+
+## Best Practices Checklist
+
+- [ ] Interactive elements meet the **24x24px** (Web) or **44x44pt** (Native) target size.
+- [ ] Focus indicators are clearly visible and high-contrast.
+- [ ] Modals **contain focus** while open, and release it cleanly on close (`Escape` key or close button).
+- [ ] Dropdowns and menus restore focus to the trigger element on close.
+- [ ] Forms provide text-based error suggestions.
+- [ ] All icon-only buttons have a descriptive text label.
+- [ ] Content reflows properly when text is scaled.
+
+## References
+
+- [WCAG 2.2 Guidelines](https://www.w3.org/TR/WCAG22/)
+- [WAI-ARIA Authoring Practices](https://www.w3.org/TR/wai-aria-practices/)
+- [iOS Accessibility Programming Guide](https://developer.apple.com/documentation/accessibility)
+- [iOS Human Interface Guidelines - Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)
+- [Android Accessibility Developer Guide](https://developer.android.com/guide/topics/ui/accessibility)
+
+## Related Skills
+
+- `frontend-patterns`
+- `frontend-design`
+- `liquid-glass-design`
+- `swiftui-patterns`
 
 
 ---

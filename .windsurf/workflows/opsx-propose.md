@@ -30,7 +30,7 @@ When ready to implement, run /opsx:apply
    Before running `openspec new change`, you MUST discover the relevant project skills.
    Run the following command in the terminal using the full description of what is being built:
    ```bash
-   node scripts/rag-skills.mjs "<description of what the user wants to build>"
+   node scripts/rag-skills.js "<description of what the user wants to build>"
    ```
    Wait for the command to finish. It will generate a file named `.rag/research/skills.md`.
    **CRITICAL**: When you reach Step 4 and start creating the `proposal.md` and `design.md` artifacts, you MUST read the content of `.rag/research/skills.md` and apply its rules strictly to the design of the new change.

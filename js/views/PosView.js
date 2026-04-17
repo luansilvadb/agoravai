@@ -21,15 +21,15 @@ class PosView {
         this.cartManager.refreshProductData();
 
         this.container.innerHTML = `
-            <div class="pos-container">
-                <!-- Lado Esquerdo: Produtos -->
-                <div class="products-section">
+            <div class="pos-container" role="main" aria-label="Ponto de venda">
+                <!-- Coluna 1: Produtos -->
+                <section class="products-section" role="region" aria-label="Catálogo de produtos">
                     <h2>Produtos</h2>
                     
                     <div class="search-bar">
-                        <input type="text" 
-                               class="form-input" 
-                               id="pos-search" 
+                        <input type="text"
+                               class="form-input"
+                               id="pos-search"
                                placeholder="Buscar produtos..."
                                value="${this.searchTerm}">
                         <select class="form-input form-select" id="pos-category-filter" style="width: 150px;">
@@ -41,15 +41,23 @@ class PosView {
                     <div class="products-grid" id="products-grid">
                         ${this._renderProducts()}
                     </div>
-                </div>
-                
-                <!-- Lado Direito: Carrinho -->
-                <div class="cart-section">
+                </section>
+
+                <!-- Coluna 2: Carrinho (centro) -->
+                <section class="cart-section" role="region" aria-label="Carrinho de compras">
                     <h2>Carrinho</h2>
-                    <div id="cart-container">
+                    <div id="cart-container" class="cart-wrapper">
                         <!-- CartView renderiza aqui -->
                     </div>
-                </div>
+                </section>
+
+                <!-- Coluna 3: Resumo/Ações (desktop only) -->
+                <aside class="summary-section" role="complementary" aria-label="Resumo da venda">
+                    <h2>Resumo</h2>
+                    <div id="summary-container" class="summary-wrapper">
+                        <!-- Resumo renderizado dinamicamente -->
+                    </div>
+                </aside>
             </div>
         `;
 
@@ -58,9 +66,13 @@ class PosView {
         this.cartView.onCheckout(() => this._goToCheckout());
         this.cartView.render();
 
+        // Renderiza o resumo (coluna 3 - desktop)
+        this._renderSummary();
+
         // Registra listener para atualizações do carrinho
         this._unsubscribeCart = this.cartManager.onChange(() => {
             this._updateCartBadge();
+            this._renderSummary(); // Atualiza resumo quando carrinho muda
         });
 
         this._attachEventListeners();
@@ -300,6 +312,84 @@ class PosView {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    /**
+     * Renderiza a seção de resumo (coluna 3 - desktop)
+     * @private
+     */
+    _renderSummary() {
+        const container = document.getElementById('summary-container');
+        if (!container) return;
+
+        const cartData = this.cartManager.getCartSummary();
+        const hasDiscount = cartData.discount > 0;
+
+        if (cartData.isEmpty) {
+            container.innerHTML = `
+                <div class="summary-empty">
+                    <i data-lucide="shopping-bag"></i>
+                    <p>Adicione itens ao carrinho</p>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="summary-content">
+                    <div class="summary-totals">
+                        <div class="summary-row">
+                            <span>Subtotal (${cartData.itemCount} item${cartData.itemCount > 1 ? 's' : ''})</span>
+                            <span>${cartData.formattedSubtotal}</span>
+                        </div>
+                        ${hasDiscount ? `
+                            <div class="summary-row discount">
+                                <span>Desconto</span>
+                                <span>-${cartData.formattedDiscount}</span>
+                            </div>
+                        ` : ''}
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span>${cartData.formattedTotal}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-actions">
+                        <button class="btn btn-outline btn-sm" id="summary-add-discount">
+                            <i data-lucide="tag"></i>
+                            ${hasDiscount ? 'Alterar' : 'Aplicar'} Desconto
+                        </button>
+                        <button class="btn btn-outline btn-sm" id="summary-clear-cart">
+                            <i data-lucide="trash-2"></i>
+                            Limpar
+                        </button>
+                    </div>
+
+                    <button class="btn btn-success btn-lg checkout-btn" id="summary-checkout">
+                        <i data-lucide="credit-card"></i>
+                        <span>Finalizar Venda</span>
+                    </button>
+                </div>
+            `;
+
+            // Anexa event listeners
+            container.querySelector('#summary-add-discount')?.addEventListener('click', () => {
+                this.cartView._showDiscountModal();
+            });
+
+            container.querySelector('#summary-clear-cart')?.addEventListener('click', () => {
+                if (confirm('Tem certeza que deseja limpar o carrinho?')) {
+                    this.cartManager.clear();
+                    window.showToast('Carrinho limpo', 'info');
+                    this.cartView.render();
+                    this._renderSummary();
+                }
+            });
+
+            container.querySelector('#summary-checkout')?.addEventListener('click', () => {
+                this._goToCheckout();
+            });
+        }
+
+        lucide.createIcons();
     }
 
     /**
