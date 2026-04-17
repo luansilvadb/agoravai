@@ -1,9 +1,6 @@
 # Dependencies
 node_modules/
 
-# Micro-RAG generated context (regenerated on demand)
-.openspec-context.md
-
 # Logs
 *.log
 npm-debug.log*
