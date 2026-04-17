@@ -1,0 +1,90 @@
+/**
+ * POS Premium Dark Theme
+ * CSS Custom Properties overrides for dark mode
+ * 
+ * @see design.md for theme specifications
+ */
+
+:root.theme-dark {
+  /* ========================================
+     COLOR TOKENS - Dark Theme Overrides
+     ======================================== */
+  
+  /* Primary Palette - slightly brighter for visibility */
+  --color-primary: #818cf8;
+  --color-primary-dark: #6366f1;
+  --color-primary-light: #a5b4fc;
+  --color-primary-50: #1e1b4b;
+  --color-primary-100: #312e81;
+  
+  /* Secondary Palette */
+  --color-secondary: #fb923c;
+  --color-secondary-dark: #f97316;
+  --color-secondary-light: #fdba74;
+  
+  /* Neutral Palette - Dark backgrounds */
+  --color-bg: #111827;
+  --color-surface: #1f2937;
+  --color-surface-elevated: #374151;
+  
+  /* Text Colors - Light on dark */
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #9ca3af;
+  --color-text-inverse: #1f2937;
+  --color-text-muted: #6b7280;
+  
+  /* Border & Divider - Lighter for visibility on dark */
+  --color-border: #374151;
+  --color-border-subtle: #1f2937;
+  --color-divider: #374151;
+  
+  /* State Colors - Adjusted for dark backgrounds */
+  --color-success: #34d399;
+  --color-success-bg: #064e3b;
+  --color-warning: #fbbf24;
+  --color-warning-bg: #78350f;
+  --color-error: #f87171;
+  --color-error-bg: #7f1d1d;
+  --color-info: #60a5fa;
+  --color-info-bg: #1e3a8a;
+  
+  /* Overlay - Darker for dark theme */
+  --color-overlay: rgba(0, 0, 0, 0.75);
+  --color-overlay-light: rgba(0, 0, 0, 0.5);
+  
+  /* ========================================
+     SHADOW TOKENS - Dark Theme Adjustments
+     ======================================== */
+  
+  /* Shadows need to be more visible on dark backgrounds */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.24);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.24);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5), 0 10px 10px rgba(0, 0, 0, 0.3);
+  
+  /* Primary Glow - Adjusted for dark */
+  --shadow-primary-sm: 0 4px 14px rgba(99, 102, 241, 0.4);
+  --shadow-primary-md: 0 4px 14px rgba(99, 102, 241, 0.6);
+  --shadow-primary-lg: 0 8px 24px rgba(99, 102, 241, 0.7);
+}
+
+/* Dark theme specific component adjustments */
+:root.theme-dark .card,
+:root.theme-dark .button--ghost {
+  background-color: var(--color-surface);
+}
+
+:root.theme-dark .button--ghost:hover {
+  background-color: var(--color-surface-elevated);
+}
+
+/* Ensure images don't look too bright in dark mode */
+:root.theme-dark img {
+  opacity: 0.95;
+}
+
+:root.theme-dark img:hover {
+  opacity: 1;
+}

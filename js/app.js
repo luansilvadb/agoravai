@@ -4,6 +4,345 @@
  */
 
 // ============================================
+// SIDEBAR CONTROLLER (Melhorar Sidebar Rich UI)
+// ============================================
+class SidebarController {
+    constructor() {
+        this.sidebar = document.getElementById('sidebar');
+        this.toggleBtn = document.getElementById('sidebar-toggle');
+        this.mainContent = document.getElementById('main-content');
+
+        this.state = {
+            collapsed: false,
+            expandedMenus: [],
+            lastRoute: 'pos'
+        };
+
+        this.STORAGE_KEY = 'pdv_sidebar_state';
+
+        this._init();
+    }
+
+    /**
+     * Inicializa o controller
+     * @private
+     */
+    _init() {
+        this._loadState();
+        this._bindEvents();
+        this._setupKeyboardShortcut();
+        this._setupStorageSync();
+        this._applyState();
+    }
+
+    /**
+     * Carrega estado do localStorage
+     * @private
+     */
+    _loadState() {
+        try {
+            const saved = localStorage.getItem(this.STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                this.state = { ...this.state, ...parsed };
+            }
+        } catch (e) {
+            console.warn('Erro ao carregar estado da sidebar:', e);
+        }
+    }
+
+    /**
+     * Salva estado no localStorage
+     * @private
+     */
+    _saveState() {
+        try {
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+        } catch (e) {
+            console.warn('Erro ao salvar estado da sidebar:', e);
+        }
+    }
+
+    /**
+     * Aplica estado atual na UI
+     * @private
+     */
+    _applyState() {
+        // Aplica estado de colapso
+        if (this.state.collapsed) {
+            this.sidebar.classList.add('sidebar-collapsed');
+        } else {
+            this.sidebar.classList.remove('sidebar-collapsed');
+        }
+
+        // Atualiza ícone do botão toggle
+        const toggleIcon = this.toggleBtn?.querySelector('i');
+        if (toggleIcon) {
+            const iconName = this.state.collapsed ? 'panel-left-open' : 'panel-left-close';
+            toggleIcon.setAttribute('data-lucide', iconName);
+            // Re-renderiza ícones lucide
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // Aplica menus expandidos
+        this.state.expandedMenus.forEach(menuId => {
+            const menu = document.querySelector(`.nav-parent[data-nav-id="${menuId}"]`);
+            if (menu) {
+                menu.classList.add('expanded');
+                const toggle = menu.querySelector('.nav-parent-toggle');
+                if (toggle) toggle.setAttribute('aria-expanded', 'true');
+            }
+        });
+    }
+
+    /**
+     * Vincula eventos de clique
+     * @private
+     */
+    _bindEvents() {
+        // Toggle de colapso
+        this.toggleBtn?.addEventListener('click', () => this.toggle());
+
+        // Toggle de menus pai
+        document.querySelectorAll('.nav-parent-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                const parent = toggle.closest('.nav-parent');
+                const menuId = parent.dataset.navId;
+                this.toggleMenu(menuId);
+            });
+        });
+
+        // Navegação em itens filhos
+        document.querySelectorAll('.nav-child').forEach(child => {
+            child.addEventListener('click', (e) => {
+                const view = child.dataset.view;
+                const parent = child.closest('.nav-parent');
+                const menuId = parent?.dataset.navId;
+
+                // Marca ativo
+                this._setActiveItem(child, menuId);
+
+                // Navega
+                if (view && window.router) {
+                    window.router.navigate(view);
+                    this.state.lastRoute = view;
+                    this._saveState();
+                }
+            });
+        });
+
+        // Navegação em itens raiz
+        document.querySelectorAll('.nav-item:not(.nav-parent-toggle)').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const view = item.dataset.view;
+                if (view && window.router) {
+                    this._setActiveItem(item);
+                    window.router.navigate(view);
+                    this.state.lastRoute = view;
+                    this._saveState();
+                }
+            });
+        });
+    }
+
+    /**
+     * Configura atalho de teclado (Ctrl/Cmd+B)
+     * @private
+     */
+    _setupKeyboardShortcut() {
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                e.preventDefault();
+                this.toggle();
+            }
+        });
+    }
+
+    /**
+     * Sincronização entre abas via storage event
+     * @private
+     */
+    _setupStorageSync() {
+        window.addEventListener('storage', (e) => {
+            if (e.key === this.STORAGE_KEY && e.newValue) {
+                try {
+                    const newState = JSON.parse(e.newValue);
+                    this.state = newState;
+                    this._applyState();
+                } catch (err) {
+                    console.warn('Erro ao sincronizar estado:', err);
+                }
+            }
+        });
+    }
+
+    /**
+     * Alterna entre expandido/colapsado
+     */
+    toggle() {
+        this.state.collapsed = !this.state.collapsed;
+        this._applyState();
+        this._saveState();
+    }
+
+    /**
+     * Expande a sidebar
+     */
+    expand() {
+        this.state.collapsed = false;
+        this._applyState();
+        this._saveState();
+    }
+
+    /**
+     * Colapsa a sidebar
+     */
+    collapse() {
+        this.state.collapsed = true;
+        this._applyState();
+        this._saveState();
+    }
+
+    /**
+     * Expande um menu específico
+     * @param {string} menuId - ID do menu
+     */
+    expandMenu(menuId) {
+        const menu = document.querySelector(`.nav-parent[data-nav-id="${menuId}"]`);
+        if (!menu) return;
+
+        menu.classList.add('expanded');
+        const toggle = menu.querySelector('.nav-parent-toggle');
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+
+        if (!this.state.expandedMenus.includes(menuId)) {
+            this.state.expandedMenus.push(menuId);
+            this._saveState();
+        }
+    }
+
+    /**
+     * Colapsa um menu específico
+     * @param {string} menuId - ID do menu
+     */
+    collapseMenu(menuId) {
+        const menu = document.querySelector(`.nav-parent[data-nav-id="${menuId}"]`);
+        if (!menu) return;
+
+        menu.classList.remove('expanded');
+        const toggle = menu.querySelector('.nav-parent-toggle');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+
+        this.state.expandedMenus = this.state.expandedMenus.filter(id => id !== menuId);
+        this._saveState();
+    }
+
+    /**
+     * Alterna estado de um menu
+     * @param {string} menuId - ID do menu
+     */
+    toggleMenu(menuId) {
+        const isExpanded = this.state.expandedMenus.includes(menuId);
+        if (isExpanded) {
+            this.collapseMenu(menuId);
+        } else {
+            this.expandMenu(menuId);
+        }
+    }
+
+    /**
+     * Define item ativo na navegação
+     * @private
+     * @param {HTMLElement} item - Elemento ativo
+     * @param {string} [parentId] - ID do menu pai (se houver)
+     */
+    _setActiveItem(item, parentId = null) {
+        // Remove ativo anterior
+        document.querySelectorAll('.nav-item.active, .nav-child.active').forEach(el => {
+            el.classList.remove('active');
+        });
+        document.querySelectorAll('.nav-item.active-indirect').forEach(el => {
+            el.classList.remove('active-indirect');
+        });
+
+        // Marca novo ativo
+        item.classList.add('active');
+
+        // Marca pai como ativo indireto
+        if (parentId) {
+            const parent = document.querySelector(`.nav-parent[data-nav-id="${parentId}"] .nav-parent-toggle`);
+            if (parent) {
+                parent.classList.add('active-indirect');
+            }
+        }
+    }
+
+    /**
+     * Atualiza item ativo baseado na rota (usado pelo Router)
+     * @private
+     * @param {string} routeName
+     */
+    _updateActiveFromRoute(routeName) {
+        // Remove ativo anterior
+        document.querySelectorAll('.nav-item.active, .nav-child.active').forEach(el => {
+            el.classList.remove('active');
+        });
+        document.querySelectorAll('.nav-item.active-indirect').forEach(el => {
+            el.classList.remove('active-indirect');
+        });
+
+        // Encontra item correspondente à rota
+        let found = false;
+
+        // Primeiro tenta encontrar item raiz
+        const rootItem = document.querySelector(`.nav-item[data-view="${routeName}"]:not(.nav-parent-toggle)`);
+        if (rootItem) {
+            rootItem.classList.add('active');
+            found = true;
+        }
+
+        // Se não encontrou, procura em filhos
+        if (!found) {
+            const childItem = document.querySelector(`.nav-child[data-view="${routeName}"]`);
+            if (childItem) {
+                childItem.classList.add('active');
+                const parent = childItem.closest('.nav-parent');
+                const menuId = parent?.dataset.navId;
+                if (menuId) {
+                    const parentToggle = parent.querySelector('.nav-parent-toggle');
+                    if (parentToggle) {
+                        parentToggle.classList.add('active-indirect');
+                    }
+                    // Expande menu se necessário
+                    this.expandMenu(menuId);
+                }
+            }
+        }
+    }
+
+    /**
+     * Retorna estado atual
+     * @returns {Object}
+     */
+    getState() {
+        return { ...this.state };
+    }
+
+    /**
+     * Define estado completo
+     * @param {Object} newState
+     */
+    setState(newState) {
+        this.state = { ...this.state, ...newState };
+        this._applyState();
+        this._saveState();
+    }
+}
+
+// ============================================
 // SISTEMA DE ROTEAMENTO (Task 9.1)
 // ============================================
 class Router {
@@ -15,6 +354,7 @@ class Router {
             'history': SaleHistoryView,
             'checkout': CheckoutView
         };
+        // PosPremiumView loaded dynamically via _loadPosPremiumView()
         this.currentRoute = null;
         this.currentView = null;
         this.mainContainer = document.getElementById('main-content');
@@ -69,6 +409,12 @@ class Router {
      * @param {boolean} [pushState=true] - Se deve adicionar ao histórico
      */
     _loadRoute(routeName, pushState = true) {
+        // Handle PosPremiumView (ES Module) - before checking routes
+        if (routeName === 'pos-premium') {
+            this._loadPosPremiumView();
+            return;
+        }
+        
         // Verifica se a rota existe
         if (!this.routes[routeName]) {
             routeName = 'pos'; // Rota padrão
@@ -130,10 +476,15 @@ class Router {
      * @param {string} routeName
      */
     _updateActiveNav(routeName) {
-        // Desktop
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.toggle('active', item.dataset.view === routeName);
-        });
+        // Desktop - usa SidebarController se disponível
+        if (window.sidebarController) {
+            window.sidebarController._updateActiveFromRoute(routeName);
+        } else {
+            // Fallback para compatibilidade
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.view === routeName);
+            });
+        }
 
         // Mobile
         document.querySelectorAll('.mobile-nav-item').forEach(item => {
@@ -148,7 +499,7 @@ class Router {
             'history': 'Histórico',
             'checkout': 'Finalizar'
         };
-        
+
         const headerTitle = document.querySelector('.header-title');
         if (headerTitle && titles[routeName]) {
             headerTitle.textContent = titles[routeName];
@@ -165,6 +516,105 @@ class Router {
         
         if (mobileMenu) mobileMenu.classList.remove('open');
         if (overlay) overlay.classList.remove('open');
+    }
+
+    /**
+     * Carrega PosPremiumView (ES Module ou Script regular)
+     * @private
+     */
+    async _loadPosPremiumView() {
+        try {
+            let PosPremiumView;
+            
+            // Check if running from file:// protocol
+            if (window.location.protocol === 'file:') {
+                // Load all dependencies first
+                await this._loadPosPremiumViewDependencies();
+                PosPremiumView = window.PosPremiumView;
+            } else {
+                // Dynamic import for ES module (HTTP/HTTPS)
+                const module = await import('./views/PosPremiumView.js');
+                PosPremiumView = module.PosPremiumView;
+            }
+            
+            if (!PosPremiumView) {
+                throw new Error('PosPremiumView not loaded');
+            }
+            
+            this.currentView = new PosPremiumView({
+                cartManager: window.cartManager,
+                onCheckout: (cart) => {
+                    this.navigate('checkout');
+                },
+                onNavigate: (view) => {
+                    this.navigate(view);
+                }
+            });
+            
+            await this.currentView.init();
+            this.currentRoute = 'pos-premium';
+            
+            // Atualiza navegação ativa
+            this._updateActiveNav('pos-premium');
+            
+        } catch (error) {
+            console.error('Error loading PosPremiumView:', error);
+            showToast('Erro ao carregar POS Premium', 'error');
+            // Fallback to regular POS
+            this.navigate('pos');
+        }
+    }
+
+    /**
+     * Load script dynamically (for file:// protocol support)
+     * @private
+     */
+    _loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load ${src}`));
+            document.head.appendChild(script);
+        });
+    }
+
+    /**
+     * Load PosPremiumView and all its dependencies (for file:// protocol)
+     * @private
+     */
+    async _loadPosPremiumViewDependencies() {
+        const deps = [
+            'js/utils/featureFlags.js',
+            'js/components/ui/Button.js',
+            'js/components/ui/Card.js',
+            'js/components/ui/QuantityControl.js',
+            'js/components/ui/ThemeToggle.js',
+            'js/components/ui/CartItemRow.js',
+            'js/components/ui/EmptyCart.js',
+            'js/components/ui/Toast.js',
+            'js/components/ui/SkeletonCard.js',
+            'js/components/ui/CartBadge.js',
+            'js/components/ui/Drawer.js',
+            'js/components/ui/BottomSheet.js',
+            'js/components/ui/SkipLinks.js',
+            'js/views/PosPremiumView.js'
+        ];
+        
+        for (const dep of deps) {
+            if (!this._isScriptLoaded(dep)) {
+                await this._loadScript(dep);
+            }
+        }
+    }
+
+    /**
+     * Check if script is already loaded
+     * @private
+     */
+    _isScriptLoaded(src) {
+        const scripts = document.querySelectorAll('script[src]');
+        return Array.from(scripts).some(s => s.src.includes(src));
     }
 
     /**
@@ -204,10 +654,15 @@ function showToast(message, type = 'info', duration = 3000) {
         info: 'info'
     };
 
-    toast.innerHTML = `
-        <i data-lucide="${icons[type] || 'info'}"></i>
-        <span>${message}</span>
-    `;
+    // Use safe DOM methods to prevent XSS
+    const icon = document.createElement('i');
+    icon.setAttribute('data-lucide', icons[type] || 'info');
+    
+    const text = document.createElement('span');
+    text.textContent = message;
+    
+    toast.appendChild(icon);
+    toast.appendChild(text);
 
     container.appendChild(toast);
     lucide.createIcons();
@@ -229,6 +684,9 @@ window.showToast = showToast;
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializa ícones
     lucide.createIcons();
+
+    // Inicializa SidebarController (antes do Router)
+    window.sidebarController = new SidebarController();
 
     // Inicializa roteador
     window.router = new Router();

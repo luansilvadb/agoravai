@@ -9,9 +9,10 @@ class CartItem {
      * @param {number} [data.quantity=1] - Quantidade do produto
      */
     constructor(data = {}) {
-        this.product = data.product || null;
-        this.quantity = this._parseQuantity(data.quantity, 1);
-        this._subtotal = null; // Cache do subtotal
+        const { product, quantity } = data;
+        this.product = product || null;
+        this.quantity = this._parseQuantity(quantity, 1);
+        this._subtotal = null;
     }
 
     /**
@@ -36,32 +37,13 @@ class CartItem {
     validate() {
         const errors = [];
 
-        if (!this.product) {
-            errors.push('Produto não informado');
-            return { isValid: false, errors };
-        }
+        if (!this.product) return { isValid: false, errors: ['Produto não informado'] };
+        if (!(this.product instanceof Product)) errors.push('Produto inválido');
+        if (this.quantity < 1) errors.push('Quantidade deve ser pelo menos 1');
+        if (!Number.isInteger(this.quantity)) errors.push('Quantidade deve ser um número inteiro');
+        if (this.product?.stock < this.quantity) errors.push(`Estoque insuficiente. Disponível: ${this.product.stock}`);
 
-        if (!(this.product instanceof Product)) {
-            errors.push('Produto inválido');
-        }
-
-        if (this.quantity < 1) {
-            errors.push('Quantidade deve ser pelo menos 1');
-        }
-
-        if (!Number.isInteger(this.quantity)) {
-            errors.push('Quantidade deve ser um número inteiro');
-        }
-
-        // Verifica se há estoque suficiente
-        if (this.product && this.product.stock < this.quantity) {
-            errors.push(`Estoque insuficiente. Disponível: ${this.product.stock}`);
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors: errors
-        };
+        return { isValid: !errors.length, errors };
     }
 
     /**
@@ -70,12 +52,7 @@ class CartItem {
      */
     getSubtotal() {
         if (!this.product) return 0;
-        
-        // Usa cache para evitar recalcular
-        if (this._subtotal === null) {
-            this._subtotal = this.product.price * this.quantity;
-        }
-        return this._subtotal;
+        return this._subtotal ??= this.product.price * this.quantity;
     }
 
     /**
@@ -98,14 +75,10 @@ class CartItem {
      */
     increaseQuantity(amount = 1) {
         if (amount <= 0) return false;
-        
         const newQuantity = this.quantity + amount;
-        if (this.product && newQuantity > this.product.stock) {
-            return false; // Não permite exceder o estoque
-        }
-        
+        if (newQuantity > this.product?.stock) return false;
         this.quantity = newQuantity;
-        this._subtotal = null; // Invalida cache
+        this._subtotal = null;
         return true;
     }
 
@@ -116,14 +89,10 @@ class CartItem {
      */
     decreaseQuantity(amount = 1) {
         if (amount <= 0) return false;
-        
         const newQuantity = this.quantity - amount;
-        if (newQuantity < 1) {
-            return false; // Não permite quantidade menor que 1
-        }
-        
+        if (newQuantity < 1) return false;
         this.quantity = newQuantity;
-        this._subtotal = null; // Invalida cache
+        this._subtotal = null;
         return true;
     }
 
@@ -134,12 +103,9 @@ class CartItem {
      */
     setQuantity(quantity) {
         const parsed = this._parseQuantity(quantity, 0);
-        
-        if (parsed < 1) return false;
-        if (this.product && parsed > this.product.stock) return false;
-        
+        if (parsed < 1 || parsed > this.product?.stock) return false;
         this.quantity = parsed;
-        this._subtotal = null; // Invalida cache
+        this._subtotal = null;
         return true;
     }
 
@@ -170,15 +136,10 @@ class CartItem {
      * @returns {CartItem}
      */
     static fromJSON(json) {
-        const data = {
-            quantity: json.quantity
-        };
-        
-        if (json.product) {
-            data.product = Product.fromJSON(json.product);
-        }
-        
-        return new CartItem(data);
+        return new CartItem({
+            quantity: json.quantity,
+            product: json.product ? Product.fromJSON(json.product) : null
+        });
     }
 
     /**

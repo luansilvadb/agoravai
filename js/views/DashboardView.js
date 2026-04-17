@@ -238,24 +238,11 @@ class DashboardView {
      * @private
      */
     _attachEventListeners() {
-        // Filtros de período
-        document.querySelectorAll('[data-period]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                this.filterPeriod = e.target.dataset.period;
-                this.render();
-            });
-        });
-
-        // Exportar dados
+        document.querySelectorAll('[data-period]').forEach(btn =>
+            btn.addEventListener('click', (e) => { this.filterPeriod = e.target.dataset.period; this.render(); }));
         document.getElementById('export-data-btn')?.addEventListener('click', () => this._exportData());
-
-        // Importar dados
         document.getElementById('import-data-btn')?.addEventListener('click', () => this._showImportModal());
-
-        // Ver histórico
-        document.getElementById('view-history-btn')?.addEventListener('click', () => {
-            window.router.navigate('history');
-        });
+        document.getElementById('view-history-btn')?.addEventListener('click', () => window.router?.navigate?.('history'));
     }
 
     /**
@@ -264,16 +251,12 @@ class DashboardView {
      */
     _exportData() {
         const { filename, blob } = this.storage.generateBackupFile();
-        
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
+        const a = Object.assign(document.createElement('a'), { href: url, download: filename });
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
         window.showToast('Dados exportados com sucesso', 'success');
     }
 
@@ -423,65 +406,26 @@ class DashboardView {
      * @private
      */
     _getStats() {
-        let sales = [];
-
-        switch (this.filterPeriod) {
-            case 'today':
-                sales = this.storage.getTodaySales();
-                break;
-            case 'week':
-                sales = this.storage.getThisWeekSales();
-                break;
-            case 'month':
-                sales = this.storage.getThisMonthSales();
-                break;
-            case 'all':
-            default:
-                sales = this.storage.getAllSales();
-                break;
-        }
-
-        const metrics = this.storage.calculateMetrics(sales);
-
-        return {
-            ...metrics,
-            systemStats: this.storage.getStats()
-        };
+        const periodMethods = { today: 'getTodaySales', week: 'getThisWeekSales', month: 'getThisMonthSales', all: 'getAllSales' };
+        const sales = this.storage[periodMethods[this.filterPeriod] || 'getAllSales']();
+        return { ...this.storage.calculateMetrics(sales), systemStats: this.storage.getStats() };
     }
 
     /**
      * Retorna label do período
      * @private
      */
-    _getPeriodLabel() {
-        const labels = {
-            today: 'Hoje',
-            week: 'Esta Semana',
-            month: 'Este Mês',
-            all: 'Total'
-        };
-        return labels[this.filterPeriod] || '';
-    }
+    _getPeriodLabel = () => ({ today: 'Hoje', week: 'Esta Semana', month: 'Este Mês', all: 'Total' }[this.filterPeriod] || '');
 
     /**
      * Formata valor como moeda
      * @private
      */
-    _formatCurrency(value) {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(value);
-    }
+    _formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
     /**
      * Escapa HTML
      * @private
      */
-    _escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+    _escapeHtml = (text) => text ? Object.assign(document.createElement('div'), { textContent: text }).innerHTML : '';
 }

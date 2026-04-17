@@ -10,15 +10,12 @@ class Cart {
      * @param {string} [data.discountType='fixed'] - Tipo de desconto: 'fixed' ou 'percentage'
      */
     constructor(data = {}) {
-        this.items = Array.isArray(data.items) 
-            ? data.items.map(item => item instanceof CartItem ? item : CartItem.fromJSON(item))
-            : [];
-        this.discount = parseFloat(data.discount) || 0;
-        this.discountType = data.discountType === 'percentage' ? 'percentage' : 'fixed';
-        this.createdAt = data.createdAt || new Date().toISOString();
-        this.updatedAt = data.updatedAt || new Date().toISOString();
-        
-        // Cache dos totais
+        const { items, discount, discountType, createdAt, updatedAt } = data;
+        this.items = items?.map(item => item instanceof CartItem ? item : CartItem.fromJSON(item)) ?? [];
+        this.discount = parseFloat(discount) || 0;
+        this.discountType = discountType === 'percentage' ? 'percentage' : 'fixed';
+        this.createdAt = createdAt ?? new Date().toISOString();
+        this.updatedAt = updatedAt ?? new Date().toISOString();
         this._subtotal = null;
         this._total = null;
         this._discountAmount = null;
@@ -29,9 +26,7 @@ class Cart {
      * @private
      */
     _invalidateCache() {
-        this._subtotal = null;
-        this._total = null;
-        this._discountAmount = null;
+        this._subtotal = this._total = this._discountAmount = null;
         this.updatedAt = new Date().toISOString();
     }
 
@@ -42,58 +37,23 @@ class Cart {
      * @returns {Object} { success: boolean, message: string, item: CartItem|null }
      */
     addItem(product, quantity = 1) {
-        if (!product || !(product instanceof Product)) {
-            return { success: false, message: 'Produto inválido', item: null };
-        }
+        if (!(product instanceof Product)) return { success: false, message: 'Produto inválido', item: null };
+        if (!product.hasStock(quantity)) return { success: false, message: `Estoque insuficiente. Disponível: ${product.stock}`, item: null };
 
-        if (!product.hasStock(quantity)) {
-            return { 
-                success: false, 
-                message: `Estoque insuficiente. Disponível: ${product.stock}`, 
-                item: null 
-            };
-        }
-
-        // Verifica se o produto já existe no carrinho
         const existingItem = this.items.find(item => item.matchesProduct(product.id));
-        
-        if (existingItem) {
-            // Tenta aumentar a quantidade
-            if (existingItem.increaseQuantity(quantity)) {
-                this._invalidateCache();
-                return { 
-                    success: true, 
-                    message: 'Quantidade atualizada no carrinho', 
-                    item: existingItem 
-                };
-            } else {
-                return { 
-                    success: false, 
-                    message: 'Não é possível adicionar mais unidades (estoque limitado)', 
-                    item: null 
-                };
-            }
-        } else {
-            // Cria novo item
-            const newItem = new CartItem({ product, quantity });
-            const validation = newItem.validate();
-            
-            if (!validation.isValid) {
-                return { 
-                    success: false, 
-                    message: validation.errors.join(', '), 
-                    item: null 
-                };
-            }
-            
-            this.items.push(newItem);
+        if (existingItem?.increaseQuantity(quantity)) {
             this._invalidateCache();
-            return { 
-                success: true, 
-                message: 'Produto adicionado ao carrinho', 
-                item: newItem 
-            };
+            return { success: true, message: 'Quantidade atualizada no carrinho', item: existingItem };
         }
+        if (existingItem) return { success: false, message: 'Não é possível adicionar mais unidades (estoque limitado)', item: null };
+
+        const newItem = new CartItem({ product, quantity });
+        const { isValid, errors } = newItem.validate();
+        if (!isValid) return { success: false, message: errors.join(', '), item: null };
+
+        this.items.push(newItem);
+        this._invalidateCache();
+        return { success: true, message: 'Produto adicionado ao carrinho', item: newItem };
     }
 
     /**
@@ -102,14 +62,13 @@ class Cart {
      * @returns {boolean} True se o item foi removido
      */
     removeItem(productId) {
-        const initialLength = this.items.length;
-        this.items = this.items.filter(item => !item.matchesProduct(productId));
-        
-        if (this.items.length < initialLength) {
+        const filtered = this.items.filter(item => !item.matchesProduct(productId));
+        const removed = filtered.length < this.items.length;
+        if (removed) {
+            this.items = filtered;
             this._invalidateCache();
-            return true;
         }
-        return false;
+        return removed;
     }
 
     /**
@@ -120,22 +79,12 @@ class Cart {
      */
     updateItemQuantity(productId, quantity) {
         const item = this.items.find(item => item.matchesProduct(productId));
-        
-        if (!item) {
-            return { success: false, message: 'Item não encontrado no carrinho' };
-        }
-
+        if (!item) return { success: false, message: 'Item não encontrado no carrinho' };
         if (quantity <= 0) {
             this.removeItem(productId);
             return { success: true, message: 'Item removido do carrinho' };
         }
-
-        if (!item.setQuantity(quantity)) {
-            return { 
-                success: false, 
-                message: `Quantidade inválida ou estoque insuficiente (máx: ${item.product.stock})` 
-            };
-        }
+        if (!item.setQuantity(quantity)) return { success: false, message: `Quantidade inválida ou estoque insuficiente (máx: ${item.product?.stock})` };
 
         this._invalidateCache();
         return { success: true, message: 'Quantidade atualizada' };
@@ -149,20 +98,10 @@ class Cart {
      */
     increaseItemQuantity(productId, amount = 1) {
         const item = this.items.find(item => item.matchesProduct(productId));
-        
-        if (!item) {
-            return { success: false, message: 'Item não encontrado no carrinho' };
-        }
-
-        if (item.increaseQuantity(amount)) {
-            this._invalidateCache();
-            return { success: true, message: 'Quantidade aumentada' };
-        }
-        
-        return { 
-            success: false, 
-            message: 'Não é possível aumentar (estoque insuficiente)' 
-        };
+        if (!item) return { success: false, message: 'Item não encontrado no carrinho' };
+        if (!item.increaseQuantity(amount)) return { success: false, message: 'Não é possível aumentar (estoque insuficiente)' };
+        this._invalidateCache();
+        return { success: true, message: 'Quantidade aumentada' };
     }
 
     /**
@@ -173,24 +112,17 @@ class Cart {
      */
     decreaseItemQuantity(productId, amount = 1) {
         const item = this.items.find(item => item.matchesProduct(productId));
-        
-        if (!item) {
-            return { success: false, message: 'Item não encontrado no carrinho', removed: false };
-        }
+        if (!item) return { success: false, message: 'Item não encontrado no carrinho', removed: false };
 
         const newQuantity = item.quantity - amount;
-        
         if (newQuantity <= 0) {
             this.removeItem(productId);
             return { success: true, message: 'Item removido do carrinho', removed: true };
         }
+        if (!item.decreaseQuantity(amount)) return { success: false, message: 'Não foi possível diminuir a quantidade', removed: false };
 
-        if (item.decreaseQuantity(amount)) {
-            this._invalidateCache();
-            return { success: true, message: 'Quantidade diminuída', removed: false };
-        }
-        
-        return { success: false, message: 'Não foi possível diminuir a quantidade', removed: false };
+        this._invalidateCache();
+        return { success: true, message: 'Quantidade diminuída', removed: false };
     }
 
     /**
@@ -198,10 +130,7 @@ class Cart {
      * @returns {number}
      */
     getSubtotal() {
-        if (this._subtotal === null) {
-            this._subtotal = this.items.reduce((sum, item) => sum + item.getSubtotal(), 0);
-        }
-        return this._subtotal;
+        return this._subtotal ??= this.items.reduce((sum, item) => sum + item.getSubtotal(), 0);
     }
 
     /**
@@ -209,19 +138,11 @@ class Cart {
      * @returns {number}
      */
     getDiscountAmount() {
-        if (this._discountAmount === null) {
-            const subtotal = this.getSubtotal();
-            
-            if (this.discountType === 'percentage') {
-                // Desconto percentual (limitado a 100%)
-                const percentage = Math.min(this.discount, 100);
-                this._discountAmount = subtotal * (percentage / 100);
-            } else {
-                // Desconto em valor fixo (limitado ao subtotal)
-                this._discountAmount = Math.min(this.discount, subtotal);
-            }
-        }
-        return this._discountAmount;
+        if (this._discountAmount !== null) return this._discountAmount;
+        const subtotal = this.getSubtotal();
+        return this._discountAmount = this.discountType === 'percentage'
+            ? subtotal * (Math.min(this.discount, 100) / 100)
+            : Math.min(this.discount, subtotal);
     }
 
     /**
@@ -229,12 +150,7 @@ class Cart {
      * @returns {number}
      */
     getTotal() {
-        if (this._total === null) {
-            const subtotal = this.getSubtotal();
-            const discount = this.getDiscountAmount();
-            this._total = Math.max(0, subtotal - discount);
-        }
-        return this._total;
+        return this._total ??= Math.max(0, this.getSubtotal() - this.getDiscountAmount());
     }
 
     /**
@@ -260,17 +176,9 @@ class Cart {
      * @returns {boolean} True se o desconto foi aplicado
      */
     applyDiscount(discount, type = 'fixed') {
-        const parsedDiscount = parseFloat(discount);
-        
-        if (isNaN(parsedDiscount) || parsedDiscount < 0) {
-            return false;
-        }
-
-        if (type === 'percentage' && parsedDiscount > 100) {
-            return false;
-        }
-
-        this.discount = parsedDiscount;
+        const parsed = parseFloat(discount);
+        if (isNaN(parsed) || parsed < 0 || (type === 'percentage' && parsed > 100)) return false;
+        this.discount = parsed;
         this.discountType = type === 'percentage' ? 'percentage' : 'fixed';
         this._invalidateCache();
         return true;
@@ -326,24 +234,12 @@ class Cart {
      * @returns {Object} { isValid: boolean, errors: string[] }
      */
     validate() {
-        const errors = [];
-
-        if (this.isEmpty()) {
-            errors.push('O carrinho está vazio');
-        }
-
-        // Valida cada item
-        for (const item of this.items) {
-            const validation = item.validate();
-            if (!validation.isValid) {
-                errors.push(...validation.errors.map(e => `${item.product?.name}: ${e}`));
-            }
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors: errors
-        };
+        if (this.isEmpty()) return { isValid: false, errors: ['O carrinho está vazio'] };
+        const errors = this.items.flatMap(item => {
+            const { isValid, errors } = item.validate();
+            return isValid ? [] : errors.map(e => `${item.product?.name}: ${e}`);
+        });
+        return { isValid: !errors.length, errors };
     }
 
     /**
@@ -388,9 +284,7 @@ class Cart {
      * @param {Object} json - Dados do carrinho
      * @returns {Cart}
      */
-    static fromJSON(json) {
-        return new Cart(json);
-    }
+    static fromJSON = (json) => new Cart(json);
 
     /**
      * Cria uma cópia do carrinho

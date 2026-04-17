@@ -1,0 +1,179 @@
+/**
+ * POS Premium Print Styles
+ * Force light mode, optimize for printing
+ * 
+ * @see design.md for print specifications
+ */
+
+@media print {
+  /* Force light theme colors */
+  :root,
+  :root.theme-dark,
+  :root.theme-high-contrast {
+    --color-bg: #ffffff;
+    --color-surface: #ffffff;
+    --color-surface-elevated: #f5f5f5;
+    --color-text-primary: #000000;
+    --color-text-secondary: #333333;
+    --color-text-tertiary: #666666;
+    --color-text-inverse: #ffffff;
+    --color-border: #cccccc;
+    --color-border-subtle: #eeeeee;
+    --color-primary: #000000;
+    --color-primary-dark: #000000;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-primary-md: none;
+  }
+
+  /* Hide interactive elements */
+  .pos-premium-layout__header,
+  .pos-premium-layout__bottom-nav,
+  .button,
+  .pos-premium-layout__cart-toggle,
+  .pos-premium-layout__sidebar-toggle,
+  .quantity-control,
+  .cart-item-row__remove-btn,
+  .skip-links,
+  .theme-toggle,
+  .toast-container,
+  .drawer,
+  .bottom-sheet,
+  .drawer-backdrop,
+  .bottom-sheet-backdrop {
+    display: none !important;
+  }
+
+  /* Show all content */
+  .pos-premium-layout,
+  .pos-premium-layout--tablet,
+  .pos-premium-layout--mobile {
+    display: block !important;
+    grid-template-columns: none !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  /* Layout adjustments */
+  .pos-premium-layout__categories,
+  .pos-premium-layout__sidebar,
+  .pos-premium-layout__category-chips {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .pos-premium-layout__products {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .pos-premium-layout__products-grid {
+    display: block !important;
+  }
+
+  /* Cart section as summary */
+  .pos-premium-layout__cart {
+    display: block !important;
+    position: static !important;
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    page-break-inside: avoid;
+  }
+
+  .pos-premium-layout__cart-header,
+  .pos-premium-layout__cart-items,
+  .pos-premium-layout__cart-footer {
+    display: block !important;
+  }
+
+  /* Cards without shadows/animations */
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 20px !important;
+    transform: none !important;
+  }
+
+  .card__image-wrapper {
+    aspect-ratio: 4 / 3 !important;
+  }
+
+  /* Cart items without hover effects */
+  .cart-item-row {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 10px !important;
+  }
+
+  /* Ensure text is black on white */
+  * {
+    background: white !important;
+    color: black !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Show URLs for links (optional) */
+  a[href]:after {
+    content: "" !important; /* Don't show URLs in POS context */
+  }
+
+  /* Page breaks */
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Print header */
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #000;
+  }
+
+  .print-header h1 {
+    font-size: 24pt;
+    margin: 0;
+  }
+
+  .print-header p {
+    font-size: 12pt;
+    margin: 5px 0;
+  }
+
+  /* Hide empty cart illustration */
+  .empty-cart__illustration {
+    display: none !important;
+  }
+
+  .empty-cart {
+    border: 1px dashed #000 !important;
+  }
+
+  /* Skeleton screens should not print */
+  .skeleton,
+  .skeleton-shimmer,
+  .skeleton-card,
+  [aria-busy="true"] {
+    display: none !important;
+  }
+}
+
+/* Print header - hidden by default */
+.print-header {
+  display: none;
+}

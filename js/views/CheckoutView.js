@@ -18,13 +18,7 @@ class CheckoutView {
      */
     render() {
         const cartData = this.cartManager.getCartSummary();
-
-        // Valida se há itens no carrinho
-        if (cartData.isEmpty) {
-            window.showToast('Adicione produtos ao carrinho primeiro', 'warning');
-            return;
-        }
-
+        if (cartData.isEmpty) return window.showToast('Adicione produtos ao carrinho primeiro', 'warning');
         this.container.innerHTML = `
             <div class="checkout-view">
                 <div class="products-header">
@@ -180,11 +174,7 @@ class CheckoutView {
 
         this._attachEventListeners();
         lucide.createIcons();
-        
-        // Atualiza display do troco se for dinheiro
-        if (this.selectedPaymentMethod === 'cash') {
-            this._updateChangeDisplay();
-        }
+        if (this.selectedPaymentMethod === 'cash') this._updateChangeDisplay();
     }
 
     /**
@@ -192,56 +182,29 @@ class CheckoutView {
      * @private
      */
     _attachEventListeners() {
-        // Voltar
-        document.getElementById('back-to-pos')?.addEventListener('click', () => {
-            if (this.onCompleteCallback) this.onCompleteCallback('back');
-        });
+        const goBack = () => this.onCompleteCallback?.('back');
+        document.getElementById('back-to-pos')?.addEventListener('click', goBack);
+        document.getElementById('cancel-checkout')?.addEventListener('click', goBack);
 
-        // Cancelar
-        document.getElementById('cancel-checkout')?.addEventListener('click', () => {
-            if (this.onCompleteCallback) this.onCompleteCallback('back');
-        });
-
-        // Seleção de método de pagamento
-        document.querySelectorAll('.payment-method').forEach(method => {
+        document.querySelectorAll('.payment-method').forEach(method =>
             method.addEventListener('click', (e) => {
                 const selected = e.currentTarget;
                 this.selectedPaymentMethod = selected.dataset.method;
-
-                // Atualiza visual
                 document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
                 selected.classList.add('selected');
 
-                // Mostra/esconde calculadora de troco
-                const changeCalculator = document.getElementById('change-calculator');
-                const pixInfo = document.getElementById('pix-info');
+                const isCash = this.selectedPaymentMethod === 'cash';
+                const isPix = this.selectedPaymentMethod === 'pix';
+                document.getElementById('change-calculator')?.classList.toggle('hidden', !isCash);
+                document.getElementById('pix-info')?.classList.toggle('hidden', !isPix);
+                if (isCash) setTimeout(() => document.getElementById('amount-paid')?.focus(), 100);
+            }));
 
-                if (this.selectedPaymentMethod === 'cash') {
-                    changeCalculator?.classList.remove('hidden');
-                    pixInfo?.classList.add('hidden');
-                    
-                    // Foca no input
-                    setTimeout(() => document.getElementById('amount-paid')?.focus(), 100);
-                } else if (this.selectedPaymentMethod === 'pix') {
-                    changeCalculator?.classList.add('hidden');
-                    pixInfo?.classList.remove('hidden');
-                } else {
-                    changeCalculator?.classList.add('hidden');
-                    pixInfo?.classList.add('hidden');
-                }
-            });
+        document.getElementById('amount-paid')?.addEventListener('input', (e) => {
+            this.amountPaid = parseFloat(e.target.value) || 0;
+            this._updateChangeDisplay();
         });
 
-        // Calculadora de troco
-        const amountInput = document.getElementById('amount-paid');
-        if (amountInput) {
-            amountInput.addEventListener('input', () => {
-                this.amountPaid = parseFloat(amountInput.value) || 0;
-                this._updateChangeDisplay();
-            });
-        }
-
-        // Confirmar venda
         document.getElementById('confirm-sale')?.addEventListener('click', () => this._processSale());
     }
 
@@ -250,23 +213,16 @@ class CheckoutView {
      * @private
      */
     _updateChangeDisplay() {
-        const cartData = this.cartManager.getCartSummary();
-        const changeDisplay = document.getElementById('change-display');
-        
-        if (!changeDisplay) return;
+        const { total } = this.cartManager.getCartSummary();
+        const display = document.getElementById('change-display');
+        if (!display) return;
 
-        if (this.amountPaid >= cartData.total) {
-            const change = this.amountPaid - cartData.total;
-            changeDisplay.innerHTML = `
-                <div style="color: var(--color-success);">Troco: <strong>${this._formatCurrency(change)}</strong></div>
-            `;
+        if (this.amountPaid >= total) {
+            display.innerHTML = `<div style="color: var(--color-success);">Troco: <strong>${this._formatCurrency(this.amountPaid - total)}</strong></div>`;
         } else if (this.amountPaid > 0) {
-            const remaining = cartData.total - this.amountPaid;
-            changeDisplay.innerHTML = `
-                <div style="color: var(--color-danger);">Faltam: <strong>${this._formatCurrency(remaining)}</strong></div>
-            `;
+            display.innerHTML = `<div style="color: var(--color-danger);">Faltam: <strong>${this._formatCurrency(total - this.amountPaid)}</strong></div>`;
         } else {
-            changeDisplay.innerHTML = '';
+            display.innerHTML = '';
         }
     }
 
@@ -275,38 +231,18 @@ class CheckoutView {
      * @private
      */
     _processSale() {
-        const cartData = this.cartManager.getCartSummary();
+        const { total } = this.cartManager.getCartSummary();
+        if (this.selectedPaymentMethod === 'cash' && this.amountPaid < total) return window.showToast('Valor recebido insuficiente', 'error');
 
-        // Validação para pagamento em dinheiro
-        if (this.selectedPaymentMethod === 'cash') {
-            if (this.amountPaid < cartData.total) {
-                window.showToast('Valor recebido insuficiente', 'error');
-                return;
-            }
-        }
-
-        // Coleta dados do cliente
         this.customer = {
             name: document.getElementById('customer-name')?.value.trim() || '',
             phone: document.getElementById('customer-phone')?.value.trim() || '',
             email: document.getElementById('customer-email')?.value.trim() || ''
         };
-
         const notes = document.getElementById('sale-notes')?.value.trim() || '';
 
-        // Processa checkout
-        const result = this.cartManager.checkout({
-            paymentMethod: this.selectedPaymentMethod,
-            customer: this.customer,
-            amountPaid: this.amountPaid,
-            notes: notes
-        });
-
-        if (result.success) {
-            this._showReceipt(result.sale);
-        } else {
-            window.showToast(result.error || 'Erro ao processar venda', 'error');
-        }
+        const result = this.cartManager.checkout({ paymentMethod: this.selectedPaymentMethod, customer: this.customer, amountPaid: this.amountPaid, notes });
+        result.success ? this._showReceipt(result.sale) : window.showToast(result.error || 'Erro ao processar venda', 'error');
     }
 
     /**
@@ -371,21 +307,11 @@ class CheckoutView {
      * Formata valor como moeda
      * @private
      */
-    _formatCurrency(value) {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(value);
-    }
+    _formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
     /**
      * Escapa HTML
      * @private
      */
-    _escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+    _escapeHtml = (text) => text ? Object.assign(document.createElement('div'), { textContent: text }).innerHTML : '';
 }

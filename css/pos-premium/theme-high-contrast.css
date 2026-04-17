@@ -1,0 +1,199 @@
+/**
+ * POS Premium High Contrast Theme
+ * CSS Custom Properties overrides for accessibility
+ * WCAG 2.2 AA compliant - maximum contrast for visibility
+ * 
+ * @see design.md for accessibility specifications
+ */
+
+:root.theme-high-contrast {
+  /* ========================================
+     COLOR TOKENS - High Contrast Overrides
+     ======================================== */
+  
+  /* Primary Palette - High visibility */
+  --color-primary: #6366f1;
+  --color-primary-dark: #4f46e5;
+  --color-primary-light: #818cf8;
+  --color-primary-50: #ffffff;
+  --color-primary-100: #e0e7ff;
+  
+  /* Secondary Palette - High visibility */
+  --color-secondary: #c2410c;
+  --color-secondary-dark: #9a3412;
+  --color-secondary-light: #ea580c;
+  
+  /* Neutral Palette - Maximum contrast */
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  
+  /* Text Colors - Maximum contrast 21:1 */
+  --color-text-primary: #000000;
+  --color-text-secondary: #000000;
+  --color-text-tertiary: #333333;
+  --color-text-inverse: #ffffff;
+  --color-text-muted: #444444;
+  
+  /* Border & Divider - Strong contrast */
+  --color-border: #000000;
+  --color-border-subtle: #333333;
+  --color-divider: #000000;
+  
+  /* State Colors - High contrast variants */
+  --color-success: #008000;
+  --color-success-bg: #e6ffe6;
+  --color-warning: #ff8c00;
+  --color-warning-bg: #fff4e6;
+  --color-error: #d00000;
+  --color-error-bg: #ffe6e6;
+  --color-info: #0066cc;
+  --color-info-bg: #e6f2ff;
+  
+  /* Overlay - For modal backdrops */
+  --color-overlay: rgba(0, 0, 0, 0.8);
+  --color-overlay-light: rgba(0, 0, 0, 0.6);
+  
+  /* ========================================
+     ACCESSIBILITY ENHANCEMENTS
+     ======================================== */
+  
+  /* Focus Ring - Very visible */
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 3px;
+  --focus-ring-color: #000000;
+  
+  /* ========================================
+     SHADOW TOKENS - Minimal/None for clarity
+     ======================================== */
+  
+  --shadow-xs: none;
+  --shadow-sm: 0 1px 0 0 #000000;
+  --shadow-md: 0 2px 0 0 #000000;
+  --shadow-lg: 0 3px 0 0 #000000;
+  --shadow-xl: 0 4px 0 0 #000000;
+  
+  /* Primary Glow - Outlined instead of glow */
+  --shadow-primary-sm: inset 0 0 0 2px #000000;
+  --shadow-primary-md: inset 0 0 0 3px #000000;
+  --shadow-primary-lg: inset 0 0 0 4px #000000;
+}
+
+/* High Contrast Specific Adjustments */
+
+/* All interactive elements get strong borders */
+:root.theme-high-contrast button,
+:root.theme-high-contrast a,
+:root.theme-high-contrast input,
+:root.theme-high-contrast select,
+:root.theme-high-contrast textarea {
+  border: 2px solid #000000;
+}
+
+/* Focus states are highly visible */
+:root.theme-high-contrast *:focus-visible {
+  outline: 3px solid #000000 !important;
+  outline-offset: 3px !important;
+}
+
+/* Buttons have strong contrast */
+:root.theme-high-contrast .button--primary {
+  background-color: #000000;
+  color: #ffffff;
+  border: 2px solid #000000;
+}
+
+:root.theme-high-contrast .button--secondary {
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+}
+
+:root.theme-high-contrast .button--ghost {
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+}
+
+/* Cards have clear boundaries */
+:root.theme-high-contrast .card {
+  border: 2px solid #000000;
+  box-shadow: none;
+}
+
+/* Skip links are always visible in high contrast */
+:root.theme-high-contrast .skip-link {
+  background-color: #000000;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+}
+
+/* Ensure text has minimum 4.5:1 contrast */
+:root.theme-high-contrast .text-muted {
+  color: #444444;
+}
+
+/* High contrast focus for form elements */
+:root.theme-high-contrast input:focus,
+:root.theme-high-contrast select:focus,
+:root.theme-high-contrast textarea:focus {
+  outline: 3px solid #000000;
+  outline-offset: 2px;
+  border-color: #000000;
+}
+
+/* Dark High Contrast Variant */
+@media (prefers-color-scheme: dark) {
+  :root.theme-high-contrast {
+    --color-bg: #000000;
+    --color-surface: #000000;
+    --color-surface-elevated: #000000;
+    
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #ffffff;
+    --color-text-tertiary: #cccccc;
+    --color-text-inverse: #000000;
+    --color-text-muted: #aaaaaa;
+    
+    --color-border: #ffffff;
+    --color-border-subtle: #cccccc;
+    --color-divider: #ffffff;
+    
+    --focus-ring-color: #ffffff;
+    
+    --shadow-sm: 0 1px 0 0 #ffffff;
+    --shadow-md: 0 2px 0 0 #ffffff;
+    --shadow-lg: 0 3px 0 0 #ffffff;
+    --shadow-xl: 0 4px 0 0 #ffffff;
+  }
+  
+  :root.theme-high-contrast button,
+  :root.theme-high-contrast a,
+  :root.theme-high-contrast input,
+  :root.theme-high-contrast select,
+  :root.theme-high-contrast textarea {
+    border: 2px solid #ffffff;
+  }
+  
+  :root.theme-high-contrast *:focus-visible {
+    outline: 3px solid #ffffff !important;
+    outline-offset: 3px !important;
+  }
+  
+  :root.theme-high-contrast .button--primary {
+    background-color: #ffffff;
+    color: #000000;
+    border: 2px solid #ffffff;
+  }
+  
+  :root.theme-high-contrast .button--secondary,
+  :root.theme-high-contrast .button--ghost {
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+  }
+  
+  :root.theme-high-contrast .card {
+    border: 2px solid #ffffff;
+  }
+}

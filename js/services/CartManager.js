@@ -54,14 +54,7 @@ class CartManager {
      */
     onChange(callback) {
         this.listeners.push(callback);
-        
-        // Retorna função de unsubscribe
-        return () => {
-            const index = this.listeners.indexOf(callback);
-            if (index > -1) {
-                this.listeners.splice(index, 1);
-            }
-        };
+        return () => { this.listeners = this.listeners.filter(cb => cb !== callback); };
     }
 
     /**
@@ -77,31 +70,27 @@ class CartManager {
      * @returns {Object}
      */
     getCartSummary() {
+        const { items, discount, discountType } = this.cart;
+        const subtotal = this.cart.getSubtotal();
+        const discountAmount = this.cart.getDiscountAmount();
+        const total = this.cart.getTotal();
         return {
-            items: this.cart.items.map(item => ({
-                product: {
-                    id: item.product.id,
-                    name: item.product.name,
-                    price: item.product.price,
-                    formattedPrice: item.product.getFormattedPrice()
-                },
-                quantity: item.quantity,
-                subtotal: item.getSubtotal(),
-                formattedSubtotal: item.getFormattedSubtotal()
+            items: items.map(({ product, quantity }) => ({
+                product: { id: product.id, name: product.name, price: product.price, formattedPrice: product.getFormattedPrice() },
+                quantity,
+                subtotal: quantity * product.price,
+                formattedSubtotal: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(quantity * product.price)
             })),
             itemCount: this.cart.getTotalItems(),
-            uniqueItemCount: this.cart.getUniqueItemCount(),
-            subtotal: this.cart.getSubtotal(),
-            formattedSubtotal: this._formatCurrency(this.cart.getSubtotal()),
-            discount: this.cart.getDiscountAmount(),
-            formattedDiscount: this._formatCurrency(this.cart.getDiscountAmount()),
-            total: this.cart.getTotal(),
-            formattedTotal: this._formatCurrency(this.cart.getTotal()),
-            isEmpty: this.cart.isEmpty(),
-            discountInfo: {
-                amount: this.cart.discount,
-                type: this.cart.discountType
-            }
+            uniqueItemCount: items.length,
+            subtotal,
+            formattedSubtotal: this._formatCurrency(subtotal),
+            discount: discountAmount,
+            formattedDiscount: this._formatCurrency(discountAmount),
+            total,
+            formattedTotal: this._formatCurrency(total),
+            isEmpty: !items.length,
+            discountInfo: { amount: discount, type: discountType }
         };
     }
 
@@ -131,17 +120,11 @@ class CartManager {
      */
     addProduct(product, quantity = 1) {
         const result = this.cart.addItem(product, quantity);
-        
         if (result.success) {
             this._saveToStorage();
             this._notifyListeners();
         }
-        
-        return {
-            success: result.success,
-            message: result.message,
-            item: result.item
-        };
+        return result;
     }
 
     /**
@@ -151,14 +134,10 @@ class CartManager {
      */
     removeProduct(productId) {
         const removed = this.cart.removeItem(productId);
-        
-        if (removed) {
-            this._saveToStorage();
-            this._notifyListeners();
-            return { success: true, message: 'Produto removido do carrinho' };
-        }
-        
-        return { success: false, message: 'Produto não encontrado no carrinho' };
+        if (!removed) return { success: false, message: 'Produto não encontrado no carrinho' };
+        this._saveToStorage();
+        this._notifyListeners();
+        return { success: true, message: 'Produto removido do carrinho' };
     }
 
     /**
@@ -169,12 +148,10 @@ class CartManager {
      */
     updateQuantity(productId, quantity) {
         const result = this.cart.updateItemQuantity(productId, quantity);
-        
         if (result.success) {
             this._saveToStorage();
             this._notifyListeners();
         }
-        
         return result;
     }
 
@@ -185,12 +162,10 @@ class CartManager {
      */
     increaseQuantity(productId) {
         const result = this.cart.increaseItemQuantity(productId);
-        
         if (result.success) {
             this._saveToStorage();
             this._notifyListeners();
         }
-        
         return result;
     }
 
@@ -201,12 +176,10 @@ class CartManager {
      */
     decreaseQuantity(productId) {
         const result = this.cart.decreaseItemQuantity(productId);
-        
         if (result.success) {
             this._saveToStorage();
             this._notifyListeners();
         }
-        
         return result;
     }
 
@@ -216,27 +189,14 @@ class CartManager {
      */
     _reserveStock() {
         const errors = [];
-        const products = this.storage.getAllProducts();
-        
-        for (const item of this.cart.items) {
-            const product = products.find(p => p.id === item.product.id);
-            if (!product) {
-                errors.push(`Produto ${item.product.name} não encontrado`);
-                continue;
-            }
-            
-            if (!product.decreaseStock(item.quantity)) {
-                errors.push(`Estoque insuficiente para ${product.name}`);
-            } else {
-                // Atualiza no storage
-                this.storage.updateProduct(product.id, { stock: product.stock });
-            }
-        }
-        
-        return {
-            success: errors.length === 0,
-            errors: errors
-        };
+        const products = new Map(this.storage.getAllProducts().map(p => [p.id, p]));
+        this.cart.items.forEach(item => {
+            const product = products.get(item.product?.id);
+            if (!product) return errors.push(`Produto ${item.product?.name} não encontrado`);
+            if (!product.decreaseStock(item.quantity)) errors.push(`Estoque insuficiente para ${product.name}`);
+            else this.storage.updateProduct(product.id, { stock: product.stock });
+        });
+        return { success: !errors.length, errors };
     }
 
     /**
@@ -244,16 +204,11 @@ class CartManager {
      * @returns {Object} { success: boolean }
      */
     _restoreStock() {
-        const products = this.storage.getAllProducts();
-        
-        for (const item of this.cart.items) {
-            const product = products.find(p => p.id === item.product.id);
-            if (product) {
-                product.increaseStock(item.quantity);
-                this.storage.updateProduct(product.id, { stock: product.stock });
-            }
-        }
-        
+        const products = new Map(this.storage.getAllProducts().map(p => [p.id, p]));
+        this.cart.items.forEach(item => {
+            const product = products.get(item.product?.id);
+            if (product?.increaseStock(item.quantity)) this.storage.updateProduct(product.id, { stock: product.stock });
+        });
         return { success: true };
     }
 
@@ -268,23 +223,10 @@ class CartManager {
      * @returns {Object} { success: boolean, message: string }
      */
     applyDiscount(value, type = 'fixed') {
-        const applied = this.cart.applyDiscount(value, type);
-        
-        if (applied) {
-            this._saveToStorage();
-            this._notifyListeners();
-            
-            const discountAmount = this.cart.getDiscountAmount();
-            return {
-                success: true,
-                message: `Desconto de ${this._formatCurrency(discountAmount)} aplicado`
-            };
-        }
-        
-        return {
-            success: false,
-            message: 'Valor de desconto inválido'
-        };
+        if (!this.cart.applyDiscount(value, type)) return { success: false, message: 'Valor de desconto inválido' };
+        this._saveToStorage();
+        this._notifyListeners();
+        return { success: true, message: `Desconto de ${this._formatCurrency(this.cart.getDiscountAmount())} aplicado` };
     }
 
     /**
@@ -317,21 +259,14 @@ class CartManager {
      * @param {string} [options.notes] - Observações
      * @returns {Object} { success: boolean, sale: Sale|null, error: string|null }
      */
-    checkout(options) {
-        // Valida o carrinho
+    checkout(options = {}) {
         const validation = this.validateForCheckout();
-        if (!validation.isValid) {
-            return { success: false, sale: null, error: validation.errors.join(', ') };
-        }
+        if (!validation.isValid) return { success: false, sale: null, error: validation.errors.join(', ') };
 
-        // Verifica/Reserva estoque
         const stockCheck = this._reserveStock();
-        if (!stockCheck.success) {
-            return { success: false, sale: null, error: stockCheck.errors.join(', ') };
-        }
+        if (!stockCheck.success) return { success: false, sale: null, error: stockCheck.errors.join(', ') };
 
         try {
-            // Cria a venda
             const sale = Sale.fromCart(this.cart, {
                 paymentMethod: options.paymentMethod || 'cash',
                 customer: options.customer || { name: '', phone: '', email: '' },
@@ -339,30 +274,23 @@ class CartManager {
                 amountPaid: options.amountPaid || this.cart.getTotal()
             });
 
-            // Calcula troco se for pagamento em dinheiro
             if (sale.isCashPayment() && options.amountPaid) {
                 const changeResult = sale.calculateChange(options.amountPaid);
                 if (!changeResult.success && sale.total > 0) {
-                    // Restaura estoque em caso de erro
                     this._restoreStock();
                     return { success: false, sale: null, error: changeResult.message };
                 }
             }
 
-            // Salva a venda
             const saveResult = this.storage.saveSale(sale);
             if (!saveResult.success) {
-                // Restaura estoque em caso de erro
                 this._restoreStock();
                 return { success: false, sale: null, error: saveResult.error };
             }
 
-            // Limpa o carrinho
             this.clear();
-
-            return { success: true, sale: sale, error: null };
+            return { success: true, sale, error: null };
         } catch (error) {
-            // Restaura estoque em caso de erro
             this._restoreStock();
             console.error('Checkout error:', error);
             return { success: false, sale: null, error: 'Erro ao processar venda' };
@@ -403,54 +331,39 @@ class CartManager {
      * @param {string} productId - ID do produto
      * @returns {boolean}
      */
-    hasProduct(productId) {
-        return this.cart.hasItem(productId);
-    }
+    hasProduct = (productId) => this.cart.hasItem(productId);
 
     /**
      * Retorna a quantidade de um produto no carrinho
      * @param {string} productId - ID do produto
      * @returns {number}
      */
-    getProductQuantity(productId) {
-        const item = this.cart.findItem(productId);
-        return item ? item.quantity : 0;
-    }
+    getProductQuantity = (productId) => this.cart.findItem(productId)?.quantity || 0;
 
     /**
      * Retorna o estoque disponível para um produto
      * @param {string} productId - ID do produto
      * @returns {number}
      */
-    getAvailableStock(productId) {
+    getAvailableStock = (productId) => {
         const product = this.storage.getProductById(productId);
-        if (!product) return 0;
-
-        // Considera o que já está no carrinho
-        const cartQuantity = this.getProductQuantity(productId);
-        return product.stock + cartQuantity;
-    }
+        return product ? product.stock + this.getProductQuantity(productId) : 0;
+    };
 
     /**
      * Sincroniza o carrinho com os produtos atuais (remove itens de produtos que não existem mais)
      * @returns {Object} { removed: number }
      */
     syncWithProducts() {
-        const products = this.storage.getAllProducts();
-        const productIds = new Set(products.map(p => p.id));
-        
-        let removed = 0;
-        this.cart.items = this.cart.items.filter(item => {
-            const exists = productIds.has(item.product.id);
-            if (!exists) removed++;
-            return exists;
-        });
-
-        if (removed > 0) {
+        const productIds = new Set(this.storage.getAllProducts().map(p => p.id));
+        const originalLength = this.cart.items.length;
+        this.cart.items = this.cart.items.filter(item => productIds.has(item.product?.id));
+        const removed = originalLength - this.cart.items.length;
+        if (removed) {
+            this.cart._invalidateCache();
             this._saveToStorage();
             this._notifyListeners();
         }
-
         return { removed };
     }
 
@@ -459,27 +372,20 @@ class CartManager {
      * @returns {Object} { updated: number }
      */
     refreshProductData() {
-        const products = this.storage.getAllProducts();
+        const products = new Map(this.storage.getAllProducts().map(p => [p.id, p]));
         let updated = 0;
-
-        for (const item of this.cart.items) {
-            const currentProduct = products.find(p => p.id === item.product.id);
-            if (currentProduct) {
-                // Atualiza dados do produto no carrinho
-                if (item.product.price !== currentProduct.price ||
-                    item.product.name !== currentProduct.name) {
-                    item.product = currentProduct.clone();
-                    updated++;
-                }
+        this.cart.items.forEach(item => {
+            const current = products.get(item.product?.id);
+            if (current && (item.product.price !== current.price || item.product.name !== current.name)) {
+                item.product = current.clone();
+                updated++;
             }
-        }
-
-        if (updated > 0) {
+        });
+        if (updated) {
             this.cart._invalidateCache();
             this._saveToStorage();
             this._notifyListeners();
         }
-
         return { updated };
     }
 }

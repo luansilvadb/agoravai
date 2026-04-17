@@ -3,28 +3,19 @@
  * Gerencia a persistência de dados no localStorage
  */
 class StorageService {
-    constructor() {
-        this.STORAGE_KEYS = {
-            PRODUCTS: 'pdv_products',
-            SALES: 'pdv_sales',
-            CART: 'pdv_cart',
-            SETTINGS: 'pdv_settings',
-            VERSION: 'pdv_version'
-        };
-        this.CURRENT_VERSION = '1.0.0';
-        this._init();
-    }
+    STORAGE_KEYS = { PRODUCTS: 'pdv_products', SALES: 'pdv_sales', CART: 'pdv_cart', SETTINGS: 'pdv_settings', VERSION: 'pdv_version' };
+    CURRENT_VERSION = '1.0.0';
+
+    constructor() { this._init(); }
 
     /**
      * Inicializa o serviço e verifica a versão do storage
      * @private
      */
     _init() {
-        const storedVersion = localStorage.getItem(this.STORAGE_KEYS.VERSION);
-        
-        if (storedVersion !== this.CURRENT_VERSION) {
-            // Migração de dados se necessário
-            this._migrateData(storedVersion);
+        const stored = localStorage.getItem(this.STORAGE_KEYS.VERSION);
+        if (stored !== this.CURRENT_VERSION) {
+            this._migrateData(stored);
             localStorage.setItem(this.STORAGE_KEYS.VERSION, this.CURRENT_VERSION);
         }
     }
@@ -34,24 +25,14 @@ class StorageService {
      * @private
      * @param {string} oldVersion - Versão anterior
      */
-    _migrateData(oldVersion) {
-        // Implementar migrações futuras aqui
-        console.log(`Migrating from ${oldVersion} to ${this.CURRENT_VERSION}`);
-    }
+    _migrateData(oldVersion) { console.log(`Migrating from ${oldVersion} to ${this.CURRENT_VERSION}`); }
 
     /**
      * Verifica se o localStorage está disponível
      * @returns {boolean}
      */
     isAvailable() {
-        try {
-            const test = '__storage_test__';
-            localStorage.setItem(test, test);
-            localStorage.removeItem(test);
-            return true;
-        } catch (e) {
-            return false;
-        }
+        try { localStorage.setItem('__t__', '1'); localStorage.removeItem('__t__'); return true; } catch { return false; }
     }
 
     /**
@@ -59,22 +40,9 @@ class StorageService {
      * @returns {Object} { used: number, total: number, remaining: number }
      */
     getStorageInfo() {
-        let used = 0;
-        for (let key in localStorage) {
-            if (localStorage.hasOwnProperty(key)) {
-                used += localStorage[key].length * 2; // Aproximação em bytes (UTF-16)
-            }
-        }
-        
-        // localStorage tem limite aproximado de 5-10MB
-        const total = 5 * 1024 * 1024; // 5MB
-        
-        return {
-            used: used,
-            total: total,
-            remaining: total - used,
-            usedPercentage: Math.round((used / total) * 100)
-        };
+        const used = Object.keys(localStorage).reduce((sum, k) => sum + (localStorage[k].length * 2), 0);
+        const total = 5 * 1024 * 1024;
+        return { used, total, remaining: total - used, usedPercentage: Math.round((used / total) * 100) };
     }
 
     // ============================================
@@ -87,13 +55,9 @@ class StorageService {
      */
     getAllProducts() {
         try {
-            const data = localStorage.getItem(this.STORAGE_KEYS.PRODUCTS);
-            const products = data ? JSON.parse(data) : [];
-            return products.map(p => Product.fromJSON(p));
-        } catch (error) {
-            console.error('Error loading products:', error);
-            return [];
-        }
+            const data = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.PRODUCTS)) ?? [];
+            return data.map(Product.fromJSON);
+        } catch (e) { console.error('Error loading products:', e); return []; }
     }
 
     /**
@@ -101,11 +65,7 @@ class StorageService {
      * @param {string} id - ID do produto
      * @returns {Product|null}
      */
-    getProductById(id) {
-        const products = this.getAllProducts();
-        const product = products.find(p => p.id === id);
-        return product || null;
-    }
+    getProductById(id) { return this.getAllProducts().find(p => p.id === id) ?? null; }
 
     /**
      * Cria um novo produto
@@ -114,29 +74,18 @@ class StorageService {
      */
     createProduct(product) {
         try {
-            const validation = product.validate();
-            if (!validation.isValid) {
-                return { success: false, product: null, error: validation.errors.join(', ') };
-            }
+            const { isValid, errors } = product.validate();
+            if (!isValid) return { success: false, product: null, error: errors.join(', ') };
 
             const products = this.getAllProducts();
-            
-            // Verifica se já existe produto com mesmo nome
-            const existingByName = products.find(p => 
-                p.name.toLowerCase().trim() === product.name.toLowerCase().trim()
-            );
-            if (existingByName) {
+            const normalizedName = product.name.toLowerCase().trim();
+            if (products.some(p => p.name.toLowerCase().trim() === normalizedName)) {
                 return { success: false, product: null, error: 'Produto com este nome já existe' };
             }
 
-            products.push(product);
-            localStorage.setItem(this.STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
-            
-            return { success: true, product: product, error: null };
-        } catch (error) {
-            console.error('Error creating product:', error);
-            return { success: false, product: null, error: 'Erro ao salvar produto' };
-        }
+            localStorage.setItem(this.STORAGE_KEYS.PRODUCTS, JSON.stringify([...products, product]));
+            return { success: true, product, error: null };
+        } catch (e) { console.error('Error creating product:', e); return { success: false, product: null, error: 'Erro ao salvar produto' }; }
     }
 
     /**
@@ -149,41 +98,21 @@ class StorageService {
         try {
             const products = this.getAllProducts();
             const index = products.findIndex(p => p.id === id);
-            
-            if (index === -1) {
-                return { success: false, product: null, error: 'Produto não encontrado' };
-            }
+            if (index === -1) return { success: false, product: null, error: 'Produto não encontrado' };
 
-            // Mescla os dados
-            const updatedProduct = new Product({
-                ...products[index].toJSON(),
-                ...updates,
-                id: id, // Mantém o ID original
-                updatedAt: new Date().toISOString()
-            });
+            const updated = new Product({ ...products[index].toJSON(), ...updates, id, updatedAt: new Date().toISOString() });
+            const { isValid, errors } = updated.validate();
+            if (!isValid) return { success: false, product: null, error: errors.join(', ') };
 
-            const validation = updatedProduct.validate();
-            if (!validation.isValid) {
-                return { success: false, product: null, error: validation.errors.join(', ') };
-            }
-
-            // Verifica nome duplicado (exceto o próprio produto)
-            const existingByName = products.find(p => 
-                p.id !== id && 
-                p.name.toLowerCase().trim() === updatedProduct.name.toLowerCase().trim()
-            );
-            if (existingByName) {
+            const normalizedName = updated.name.toLowerCase().trim();
+            if (products.some((p, i) => i !== index && p.name.toLowerCase().trim() === normalizedName)) {
                 return { success: false, product: null, error: 'Produto com este nome já existe' };
             }
 
-            products[index] = updatedProduct;
+            products[index] = updated;
             localStorage.setItem(this.STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
-            
-            return { success: true, product: updatedProduct, error: null };
-        } catch (error) {
-            console.error('Error updating product:', error);
-            return { success: false, product: null, error: 'Erro ao atualizar produto' };
-        }
+            return { success: true, product: updated, error: null };
+        } catch (e) { console.error('Error updating product:', e); return { success: false, product: null, error: 'Erro ao atualizar produto' }; }
     }
 
     /**
@@ -195,17 +124,10 @@ class StorageService {
         try {
             const products = this.getAllProducts();
             const filtered = products.filter(p => p.id !== id);
-            
-            if (filtered.length === products.length) {
-                return { success: false, error: 'Produto não encontrado' };
-            }
-
+            if (filtered.length === products.length) return { success: false, error: 'Produto não encontrado' };
             localStorage.setItem(this.STORAGE_KEYS.PRODUCTS, JSON.stringify(filtered));
             return { success: true, error: null };
-        } catch (error) {
-            console.error('Error deleting product:', error);
-            return { success: false, error: 'Erro ao excluir produto' };
-        }
+        } catch (e) { console.error('Error deleting product:', e); return { success: false, error: 'Erro ao excluir produto' }; }
     }
 
     /**
@@ -214,13 +136,8 @@ class StorageService {
      * @returns {Product[]}
      */
     searchProducts(term) {
-        const products = this.getAllProducts();
         const searchTerm = term.toLowerCase().trim();
-        
-        return products.filter(p => 
-            p.name.toLowerCase().includes(searchTerm) ||
-            p.category.toLowerCase().includes(searchTerm)
-        );
+        return this.getAllProducts().filter(p => p.name.toLowerCase().includes(searchTerm) || p.category.toLowerCase().includes(searchTerm));
     }
 
     /**
@@ -228,30 +145,20 @@ class StorageService {
      * @param {string} category - Categoria
      * @returns {Product[]}
      */
-    getProductsByCategory(category) {
-        const products = this.getAllProducts();
-        return products.filter(p => p.category === category);
-    }
+    getProductsByCategory(category) { return this.getAllProducts().filter(p => p.category === category); }
 
     /**
      * Retorna todas as categorias únicas
      * @returns {string[]}
      */
-    getCategories() {
-        const products = this.getAllProducts();
-        const categories = new Set(products.map(p => p.category).filter(Boolean));
-        return Array.from(categories).sort();
-    }
+    getCategories() { return [...new Set(this.getAllProducts().map(p => p.category).filter(Boolean))].sort(); }
 
     /**
      * Retorna produtos com estoque baixo
      * @param {number} [threshold=5] - Limite para estoque baixo
      * @returns {Product[]}
      */
-    getLowStockProducts(threshold = 5) {
-        const products = this.getAllProducts();
-        return products.filter(p => p.stock <= threshold);
-    }
+    getLowStockProducts(threshold = 5) { return this.getAllProducts().filter(p => p.stock <= threshold); }
 
     // ============================================
     // SALES CRUD (Task 4.3)
@@ -263,13 +170,9 @@ class StorageService {
      */
     getAllSales() {
         try {
-            const data = localStorage.getItem(this.STORAGE_KEYS.SALES);
-            const sales = data ? JSON.parse(data) : [];
-            return sales.map(s => Sale.fromJSON(s));
-        } catch (error) {
-            console.error('Error loading sales:', error);
-            return [];
-        }
+            const data = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.SALES)) ?? [];
+            return data.map(Sale.fromJSON);
+        } catch (e) { console.error('Error loading sales:', e); return []; }
     }
 
     /**
@@ -277,11 +180,7 @@ class StorageService {
      * @param {string} id - ID da venda
      * @returns {Sale|null}
      */
-    getSaleById(id) {
-        const sales = this.getAllSales();
-        const sale = sales.find(s => s.id === id);
-        return sale || null;
-    }
+    getSaleById(id) { return this.getAllSales().find(s => s.id === id) ?? null; }
 
     /**
      * Salva uma nova venda
@@ -290,20 +189,11 @@ class StorageService {
      */
     saveSale(sale) {
         try {
-            const validation = sale.validate();
-            if (!validation.isValid) {
-                return { success: false, sale: null, error: validation.errors.join(', ') };
-            }
-
-            const sales = this.getAllSales();
-            sales.push(sale);
-            localStorage.setItem(this.STORAGE_KEYS.SALES, JSON.stringify(sales));
-            
-            return { success: true, sale: sale, error: null };
-        } catch (error) {
-            console.error('Error saving sale:', error);
-            return { success: false, sale: null, error: 'Erro ao salvar venda' };
-        }
+            const { isValid, errors } = sale.validate();
+            if (!isValid) return { success: false, sale: null, error: errors.join(', ') };
+            localStorage.setItem(this.STORAGE_KEYS.SALES, JSON.stringify([...this.getAllSales(), sale]));
+            return { success: true, sale, error: null };
+        } catch (e) { console.error('Error saving sale:', e); return { success: false, sale: null, error: 'Erro ao salvar venda' }; }
     }
 
     /**
@@ -316,31 +206,16 @@ class StorageService {
         try {
             const sales = this.getAllSales();
             const index = sales.findIndex(s => s.id === id);
-            
-            if (index === -1) {
-                return { success: false, sale: null, error: 'Venda não encontrada' };
-            }
+            if (index === -1) return { success: false, sale: null, error: 'Venda não encontrada' };
 
-            const updatedSale = new Sale({
-                ...sales[index].toJSON(),
-                ...updates,
-                id: id,
-                updatedAt: new Date().toISOString()
-            });
+            const updated = new Sale({ ...sales[index].toJSON(), ...updates, id, updatedAt: new Date().toISOString() });
+            const { isValid, errors } = updated.validate();
+            if (!isValid) return { success: false, sale: null, error: errors.join(', ') };
 
-            const validation = updatedSale.validate();
-            if (!validation.isValid) {
-                return { success: false, sale: null, error: validation.errors.join(', ') };
-            }
-
-            sales[index] = updatedSale;
+            sales[index] = updated;
             localStorage.setItem(this.STORAGE_KEYS.SALES, JSON.stringify(sales));
-            
-            return { success: true, sale: updatedSale, error: null };
-        } catch (error) {
-            console.error('Error updating sale:', error);
-            return { success: false, sale: null, error: 'Erro ao atualizar venda' };
-        }
+            return { success: true, sale: updated, error: null };
+        } catch (e) { console.error('Error updating sale:', e); return { success: false, sale: null, error: 'Erro ao atualizar venda' }; }
     }
 
     /**
@@ -420,13 +295,8 @@ class StorageService {
      * @returns {boolean}
      */
     saveCart(cart) {
-        try {
-            localStorage.setItem(this.STORAGE_KEYS.CART, JSON.stringify(cart.toJSON()));
-            return true;
-        } catch (error) {
-            console.error('Error saving cart:', error);
-            return false;
-        }
+        try { localStorage.setItem(this.STORAGE_KEYS.CART, JSON.stringify(cart.toJSON())); return true; }
+        catch (e) { console.error('Error saving cart:', e); return false; }
     }
 
     /**
@@ -436,14 +306,8 @@ class StorageService {
     loadCart() {
         try {
             const data = localStorage.getItem(this.STORAGE_KEYS.CART);
-            if (!data) return null;
-            
-            const cartData = JSON.parse(data);
-            return Cart.fromJSON(cartData);
-        } catch (error) {
-            console.error('Error loading cart:', error);
-            return null;
-        }
+            return data ? Cart.fromJSON(JSON.parse(data)) : null;
+        } catch (e) { console.error('Error loading cart:', e); return null; }
     }
 
     /**
@@ -451,13 +315,8 @@ class StorageService {
      * @returns {boolean}
      */
     clearCart() {
-        try {
-            localStorage.removeItem(this.STORAGE_KEYS.CART);
-            return true;
-        } catch (error) {
-            console.error('Error clearing cart:', error);
-            return false;
-        }
+        try { localStorage.removeItem(this.STORAGE_KEYS.CART); return true; }
+        catch (e) { console.error('Error clearing cart:', e); return false; }
     }
 
     // ============================================
@@ -670,12 +529,8 @@ class StorageService {
      * @returns {Object}
      */
     getSettings() {
-        try {
-            const data = localStorage.getItem(this.STORAGE_KEYS.SETTINGS);
-            return data ? JSON.parse(data) : this._getDefaultSettings();
-        } catch (error) {
-            return this._getDefaultSettings();
-        }
+        try { return JSON.parse(localStorage.getItem(this.STORAGE_KEYS.SETTINGS)) ?? this._getDefaultSettings(); }
+        catch { return this._getDefaultSettings(); }
     }
 
     /**
@@ -683,15 +538,7 @@ class StorageService {
      * @private
      * @returns {Object}
      */
-    _getDefaultSettings() {
-        return {
-            storeName: 'Minha Loja',
-            currency: 'BRL',
-            locale: 'pt-BR',
-            lowStockThreshold: 5,
-            autoSaveCart: true
-        };
-    }
+    _getDefaultSettings = () => ({ storeName: 'Minha Loja', currency: 'BRL', locale: 'pt-BR', lowStockThreshold: 5, autoSaveCart: true });
 
     /**
      * Salva as configurações
@@ -699,13 +546,8 @@ class StorageService {
      * @returns {boolean}
      */
     saveSettings(settings) {
-        try {
-            localStorage.setItem(this.STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
-            return true;
-        } catch (error) {
-            console.error('Error saving settings:', error);
-            return false;
-        }
+        try { localStorage.setItem(this.STORAGE_KEYS.SETTINGS, JSON.stringify(settings)); return true; }
+        catch (e) { console.error('Error saving settings:', e); return false; }
     }
 
     // ============================================
@@ -717,15 +559,8 @@ class StorageService {
      * @returns {boolean}
      */
     clearAllData() {
-        try {
-            Object.values(this.STORAGE_KEYS).forEach(key => {
-                localStorage.removeItem(key);
-            });
-            return true;
-        } catch (error) {
-            console.error('Error clearing all data:', error);
-            return false;
-        }
+        try { Object.values(this.STORAGE_KEYS).forEach(k => localStorage.removeItem(k)); return true; }
+        catch (e) { console.error('Error clearing all data:', e); return false; }
     }
 
     /**

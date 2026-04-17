@@ -15,14 +15,15 @@ class Product {
      * @param {string} [data.updatedAt] - Data de atualização (ISO string)
      */
     constructor(data = {}) {
-        this.id = data.id || this._generateId();
-        this.name = data.name || '';
-        this.price = this._parseNumber(data.price, 0);
-        this.category = data.category || '';
-        this.stock = this._parseNumber(data.stock, 0);
-        this.description = data.description || '';
-        this.createdAt = data.createdAt || new Date().toISOString();
-        this.updatedAt = data.updatedAt || new Date().toISOString();
+        const { id, name, price, category, stock, description, createdAt, updatedAt } = data;
+        this.id = id || this._generateId();
+        this.name = name || '';
+        this.price = this._parseNumber(price, 0);
+        this.category = category || '';
+        this.stock = this._parseNumber(stock, 0);
+        this.description = description || '';
+        this.createdAt = createdAt || new Date().toISOString();
+        this.updatedAt = updatedAt || new Date().toISOString();
     }
 
     /**
@@ -31,7 +32,7 @@ class Product {
      * @returns {string} ID único
      */
     _generateId() {
-        return 'prod_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        return `prod_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     }
 
     /**
@@ -52,37 +53,21 @@ class Product {
      */
     validate() {
         const errors = [];
+        const nameTrimmed = this.name?.trim();
 
-        if (!this.name || this.name.trim().length === 0) {
-            errors.push('O nome do produto é obrigatório');
-        }
+        if (!nameTrimmed) errors.push('O nome do produto é obrigatório');
+        else if (nameTrimmed.length > 100) errors.push('O nome do produto deve ter no máximo 100 caracteres');
 
-        if (this.name && this.name.trim().length > 100) {
-            errors.push('O nome do produto deve ter no máximo 100 caracteres');
-        }
+        if (this.price == null || isNaN(this.price)) errors.push('O preço do produto é obrigatório');
+        else if (this.price < 0) errors.push('O preço do produto não pode ser negativo');
 
-        if (this.price === undefined || this.price === null || isNaN(this.price)) {
-            errors.push('O preço do produto é obrigatório');
-        } else if (this.price < 0) {
-            errors.push('O preço do produto não pode ser negativo');
-        }
+        if (this.stock == null || isNaN(this.stock)) errors.push('A quantidade em estoque é obrigatória');
+        else if (this.stock < 0) errors.push('A quantidade em estoque não pode ser negativa');
+        else if (!Number.isInteger(this.stock)) errors.push('A quantidade em estoque deve ser um número inteiro');
 
-        if (this.stock === undefined || this.stock === null || isNaN(this.stock)) {
-            errors.push('A quantidade em estoque é obrigatória');
-        } else if (this.stock < 0) {
-            errors.push('A quantidade em estoque não pode ser negativa');
-        } else if (!Number.isInteger(this.stock)) {
-            errors.push('A quantidade em estoque deve ser um número inteiro');
-        }
+        if (this.category?.trim().length > 50) errors.push('A categoria deve ter no máximo 50 caracteres');
 
-        if (this.category && this.category.trim().length > 50) {
-            errors.push('A categoria deve ter no máximo 50 caracteres');
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors: errors
-        };
+        return { isValid: !errors.length, errors };
     }
 
     /**

@@ -16,15 +16,8 @@ class CartView {
     render(targetContainer = null) {
         const container = document.getElementById(targetContainer || this.containerId);
         if (!container) return;
-
         const cartData = this.cartManager.getCartSummary();
-
-        if (cartData.isEmpty) {
-            container.innerHTML = this._renderEmptyState();
-        } else {
-            container.innerHTML = this._renderCartWithItems(cartData);
-        }
-
+        container.innerHTML = cartData.isEmpty ? this._renderEmptyState() : this._renderCartWithItems(cartData);
         this._attachEventListeners(container);
         lucide.createIcons();
     }
@@ -143,77 +136,42 @@ class CartView {
      * @param {HTMLElement} container
      */
     _attachEventListeners(container) {
-        // Diminuir quantidade
-        container.querySelectorAll('.decrease-qty').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = e.currentTarget.dataset.id;
-                const result = this.cartManager.decreaseQuantity(id);
-                if (result.removed) {
-                    window.showToast('Item removido do carrinho', 'info');
-                }
-                this.render();
-            });
-        });
+        const onQtyChange = (id, result, removedMsg) => {
+            if (removedMsg && result.removed) window.showToast(removedMsg, 'info');
+            if (!result.success && result.message) window.showToast(result.message, 'warning');
+            this.render();
+        };
 
-        // Aumentar quantidade
-        container.querySelectorAll('.increase-qty').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = e.currentTarget.dataset.id;
-                const result = this.cartManager.increaseQuantity(id);
-                if (!result.success) {
-                    window.showToast(result.message, 'warning');
-                }
-                this.render();
-            });
-        });
+        container.querySelectorAll('.decrease-qty').forEach(btn =>
+            btn.addEventListener('click', (e) => onQtyChange(e.currentTarget.dataset.id, this.cartManager.decreaseQuantity(e.currentTarget.dataset.id), 'Item removido do carrinho')));
 
-        // Remover item
-        container.querySelectorAll('.remove-item').forEach(btn => {
+        container.querySelectorAll('.increase-qty').forEach(btn =>
+            btn.addEventListener('click', (e) => onQtyChange(e.currentTarget.dataset.id, this.cartManager.increaseQuantity(e.currentTarget.dataset.id))));
+
+        container.querySelectorAll('.remove-item').forEach(btn =>
             btn.addEventListener('click', (e) => {
-                const id = e.currentTarget.dataset.id;
-                this.cartManager.removeProduct(id);
+                this.cartManager.removeProduct(e.currentTarget.dataset.id);
                 window.showToast('Item removido do carrinho', 'info');
                 this.render();
-            });
+            }));
+
+        container.querySelector('#add-discount-btn')?.addEventListener('click', () => this._showDiscountModal());
+
+        container.querySelector('#remove-discount-btn')?.addEventListener('click', () => {
+            this.cartManager.removeDiscount();
+            window.showToast('Desconto removido', 'info');
+            this.render();
         });
 
-        // Aplicar desconto
-        const addDiscountBtn = container.querySelector('#add-discount-btn');
-        if (addDiscountBtn) {
-            addDiscountBtn.addEventListener('click', () => this._showDiscountModal());
-        }
-
-        // Remover desconto
-        const removeDiscountBtn = container.querySelector('#remove-discount-btn');
-        if (removeDiscountBtn) {
-            removeDiscountBtn.addEventListener('click', () => {
-                this.cartManager.removeDiscount();
-                window.showToast('Desconto removido', 'info');
+        container.querySelector('#clear-cart-btn')?.addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja limpar o carrinho?')) {
+                this.cartManager.clear();
+                window.showToast('Carrinho limpo', 'info');
                 this.render();
-            });
-        }
+            }
+        });
 
-        // Limpar carrinho
-        const clearCartBtn = container.querySelector('#clear-cart-btn');
-        if (clearCartBtn) {
-            clearCartBtn.addEventListener('click', () => {
-                if (confirm('Tem certeza que deseja limpar o carrinho?')) {
-                    this.cartManager.clear();
-                    window.showToast('Carrinho limpo', 'info');
-                    this.render();
-                }
-            });
-        }
-
-        // Checkout
-        const checkoutBtn = container.querySelector('#checkout-btn');
-        if (checkoutBtn) {
-            checkoutBtn.addEventListener('click', () => {
-                if (this.onCheckoutCallback) {
-                    this.onCheckoutCallback();
-                }
-            });
-        }
+        container.querySelector('#checkout-btn')?.addEventListener('click', () => this.onCheckoutCallback?.());
     }
 
     /**
@@ -221,154 +179,79 @@ class CartView {
      * @private
      */
     _showDiscountModal() {
-        const currentData = this.cartManager.getCartSummary();
-        
+        const current = this.cartManager.getCartSummary();
+        const isFixed = current.discountInfo.type === 'fixed';
+
         const modalHTML = `
             <div class="modal-overlay" id="discount-modal">
                 <div class="modal" style="max-width: 400px;">
-                    <div class="modal-header">
-                        <h3>Aplicar Desconto</h3>
-                        <button class="close-btn" id="close-discount-modal">
-                            <i data-lucide="x"></i>
-                        </button>
-                    </div>
+                    <div class="modal-header"><h3>Aplicar Desconto</h3><button class="close-btn" id="close-discount-modal"><i data-lucide="x"></i></button></div>
                     <form id="discount-form">
                         <div class="modal-body">
                             <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                                <button type="button" class="btn ${currentData.discountInfo.type === 'fixed' ? 'btn-primary' : 'btn-outline'}" 
-                                        id="discount-type-fixed" style="flex: 1;">Valor (R$)</button>
-                                <button type="button" class="btn ${currentData.discountInfo.type === 'percentage' ? 'btn-primary' : 'btn-outline'}" 
-                                        id="discount-type-percentage" style="flex: 1;">Percentual (%)</button>
+                                <button type="button" class="btn ${isFixed ? 'btn-primary' : 'btn-outline'}" id="discount-type-fixed" style="flex: 1;">Valor (R$)</button>
+                                <button type="button" class="btn ${!isFixed ? 'btn-primary' : 'btn-outline'}" id="discount-type-percentage" style="flex: 1;">Percentual (%)</button>
                             </div>
-                            
                             <div class="form-group">
                                 <label class="form-label">Valor do Desconto</label>
-                                <input type="number" 
-                                       class="form-input" 
-                                       id="discount-value" 
-                                       min="0" 
-                                       step="${currentData.discountInfo.type === 'percentage' ? '1' : '0.01'}"
-                                       max="${currentData.discountInfo.type === 'percentage' ? '100' : currentData.subtotal}"
-                                       value="${currentData.discountInfo.amount || ''}"
-                                       placeholder="0"
-                                       required>
+                                <input type="number" class="form-input" id="discount-value" min="0" step="${isFixed ? '0.01' : '1'}"
+                                    max="${isFixed ? current.subtotal : '100'}" value="${current.discountInfo.amount || ''}" placeholder="0" required>
                             </div>
-                            
                             <div id="discount-preview" style="background: var(--color-gray-50); padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                    <span>Subtotal:</span>
-                                    <span>${currentData.formattedSubtotal}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; color: var(--color-success); margin-bottom: 0.5rem;">
-                                    <span>Desconto:</span>
-                                    <span id="preview-discount">-${currentData.formattedDiscount}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.125rem; padding-top: 0.5rem; border-top: 1px solid var(--color-gray-200);">
-                                    <span>Total:</span>
-                                    <span id="preview-total">${currentData.formattedTotal}</span>
-                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"><span>Subtotal:</span><span>${current.formattedSubtotal}</span></div>
+                                <div style="display: flex; justify-content: space-between; color: var(--color-success); margin-bottom: 0.5rem;"><span>Desconto:</span><span id="preview-discount">-${current.formattedDiscount}</span></div>
+                                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.125rem; padding-top: 0.5rem; border-top: 1px solid var(--color-gray-200);"><span>Total:</span><span id="preview-total">${current.formattedTotal}</span></div>
                             </div>
                         </div>
-                        
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" id="cancel-discount-btn">Cancelar</button>
                             <button type="submit" class="btn btn-primary">Aplicar</button>
                         </div>
                     </form>
                 </div>
-            </div>
-        `;
+            </div>`;
 
-        const modalContainer = document.createElement('div');
-        modalContainer.innerHTML = modalHTML;
-        document.body.appendChild(modalContainer);
+        const container = document.createElement('div');
+        container.innerHTML = modalHTML;
+        document.body.appendChild(container);
 
-        let discountType = currentData.discountInfo.type || 'fixed';
-
-        // Mostra o modal
-        setTimeout(() => {
-            const modal = document.getElementById('discount-modal');
-            modal.classList.add('open');
-            lucide.createIcons();
-            document.getElementById('discount-value').focus();
-        }, 10);
-
-        // Event listeners
+        let discountType = current.discountInfo.type || 'fixed';
         const modal = document.getElementById('discount-modal');
-        const form = document.getElementById('discount-form');
         const valueInput = document.getElementById('discount-value');
 
-        // Fecha modal
-        const closeModal = () => {
-            modal.classList.remove('open');
-            setTimeout(() => modalContainer.remove(), 300);
+        const closeModal = () => { modal.classList.remove('open'); setTimeout(() => container.remove(), 300); };
+
+        setTimeout(() => { modal.classList.add('open'); lucide.createIcons(); valueInput.focus(); }, 10);
+
+        document.getElementById('close-discount-modal')?.addEventListener('click', closeModal);
+        document.getElementById('cancel-discount-btn')?.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        const toggleType = (type, step, max) => {
+            discountType = type;
+            document.getElementById('discount-type-fixed').className = `btn ${type === 'fixed' ? 'btn-primary' : 'btn-outline'}`;
+            document.getElementById('discount-type-percentage').className = `btn ${type === 'percentage' ? 'btn-primary' : 'btn-outline'}`;
+            valueInput.step = step;
+            valueInput.max = max;
         };
 
-        document.getElementById('close-discount-modal').addEventListener('click', closeModal);
-        document.getElementById('cancel-discount-btn').addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
+        document.getElementById('discount-type-fixed').addEventListener('click', () => toggleType('fixed', '0.01', current.subtotal));
+        document.getElementById('discount-type-percentage').addEventListener('click', () => toggleType('percentage', '1', '100'));
 
-        // Toggle tipo de desconto
-        document.getElementById('discount-type-fixed').addEventListener('click', function() {
-            discountType = 'fixed';
-            this.classList.add('btn-primary');
-            this.classList.remove('btn-outline');
-            document.getElementById('discount-type-percentage').classList.remove('btn-primary');
-            document.getElementById('discount-type-percentage').classList.add('btn-outline');
-            valueInput.step = '0.01';
-            valueInput.max = currentData.subtotal;
-        });
-
-        document.getElementById('discount-type-percentage').addEventListener('click', function() {
-            discountType = 'percentage';
-            this.classList.add('btn-primary');
-            this.classList.remove('btn-outline');
-            document.getElementById('discount-type-fixed').classList.remove('btn-primary');
-            document.getElementById('discount-type-fixed').classList.add('btn-outline');
-            valueInput.step = '1';
-            valueInput.max = '100';
-        });
-
-        // Preview em tempo real
         valueInput.addEventListener('input', () => {
             const value = parseFloat(valueInput.value) || 0;
-            const subtotal = currentData.subtotal;
-            let discount = 0;
-            let total = subtotal;
-
-            if (discountType === 'percentage') {
-                discount = subtotal * (Math.min(value, 100) / 100);
-            } else {
-                discount = Math.min(value, subtotal);
-            }
-
-            total = subtotal - discount;
-
+            const discount = discountType === 'percentage' ? current.subtotal * (Math.min(value, 100) / 100) : Math.min(value, current.subtotal);
             document.getElementById('preview-discount').textContent = '-' + this._formatCurrency(discount);
-            document.getElementById('preview-total').textContent = this._formatCurrency(total);
+            document.getElementById('preview-total').textContent = this._formatCurrency(current.subtotal - discount);
         });
 
-        // Submit
-        form.addEventListener('submit', (e) => {
+        document.getElementById('discount-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const value = parseFloat(valueInput.value);
-            
-            if (isNaN(value) || value <= 0) {
-                window.showToast('Informe um valor de desconto válido', 'error');
-                return;
-            }
-
+            if (!value || value <= 0) return window.showToast('Informe um valor de desconto válido', 'error');
             const result = this.cartManager.applyDiscount(value, discountType);
-            
-            if (result.success) {
-                window.showToast(result.message, 'success');
-                closeModal();
-                this.render();
-            } else {
-                window.showToast(result.message, 'error');
-            }
+            window.showToast(result.message, result.success ? 'success' : 'error');
+            if (result.success) { closeModal(); this.render(); }
         });
     }
 
@@ -376,23 +259,13 @@ class CartView {
      * Formata valor como moeda
      * @private
      */
-    _formatCurrency(value) {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(value);
-    }
+    _formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
     /**
      * Escapa HTML
      * @private
      */
-    _escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+    _escapeHtml = (text) => text ? Object.assign(document.createElement('div'), { textContent: text }).innerHTML : '';
 
     /**
      * Define callback para checkout
