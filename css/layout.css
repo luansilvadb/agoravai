@@ -1,0 +1,329 @@
+/* ============================================
+   LAYOUT CSS - Grid, Navigation, Sections
+   ============================================ */
+
+/* ============================================
+   APP LAYOUT STRUCTURE
+   ============================================ */
+
+body {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ============================================
+   NAVIGATION - Sidebar (Desktop)
+   ============================================ */
+
+.navigation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 240px;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6);
+  z-index: var(--z-sticky);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.nav-logo {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.nav-logo svg {
+  width: 24px;
+  height: 24px;
+}
+
+.nav-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--color-text);
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.nav-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+.nav-link:hover {
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text);
+}
+
+.nav-link.active {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* ============================================
+   MAIN CONTENT AREA
+   ============================================ */
+
+.main {
+  flex: 1;
+  margin-left: 240px;
+  padding: var(--space-6);
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+/* ============================================
+   SECTIONS (SPA-like)
+   ============================================ */
+
+.section {
+  display: none;
+  animation: fadeIn var(--transition-slow);
+}
+
+.section--active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.section-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+/* ============================================
+   GRID SYSTEM
+   ============================================ */
+
+.grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.grid--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* ============================================
+   RESPONSIVE - Tablet & Mobile
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .grid--4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .grid--3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  /* Navigation becomes bottom bar */
+  .navigation {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 64px;
+    flex-direction: row;
+    padding: var(--space-2) var(--space-4);
+    border-right: none;
+    border-top: 1px solid var(--color-border);
+    justify-content: space-around;
+    align-items: center;
+  }
+  
+  .nav-brand {
+    display: none;
+  }
+  
+  .nav-menu {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+  }
+  
+  .nav-link {
+    flex-direction: column;
+    padding: var(--space-1) var(--space-2);
+    font-size: 0.75rem;
+    gap: var(--space-1);
+  }
+  
+  .nav-link span {
+    font-size: 0.625rem;
+  }
+  
+  .nav-link svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .main {
+    margin-left: 0;
+    margin-bottom: 64px;
+    padding: var(--space-4);
+  }
+  
+  /* Grids become single column */
+  .grid--2,
+  .grid--3,
+  .grid--4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .section-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: var(--space-3);
+  }
+  
+  .section-header {
+    margin-bottom: var(--space-4);
+  }
+  
+  .nav-link span {
+    display: none;
+  }
+  
+  .navigation {
+    height: 56px;
+    padding: var(--space-2);
+  }
+  
+  .main {
+    margin-bottom: 56px;
+  }
+}
+
+/* Safe area for notched devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  @media (max-width: 768px) {
+    .navigation {
+      padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+      height: calc(64px + env(safe-area-inset-bottom));
+    }
+    
+    .main {
+      margin-bottom: calc(64px + env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* ============================================
+   DASHBOARD SPECIFIC LAYOUTS
+   ============================================ */
+
+.summary-cards {
+  margin-bottom: var(--space-6);
+}
+
+.dashboard-grid {
+  margin-bottom: var(--space-6);
+}
+
+/* ============================================
+   PERIOD FILTERS
+   ============================================ */
+
+.period-filters {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.empty-state svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin-bottom: var(--space-2);
+}

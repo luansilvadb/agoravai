@@ -1,0 +1,174 @@
+/* ============================================
+   THEME CSS - Theme-specific overrides
+   ============================================ */
+
+/* ============================================
+   TRANSITIONS BETWEEN THEMES
+   ============================================ */
+
+* {
+  transition: background-color var(--transition-fast),
+              border-color var(--transition-fast),
+              color var(--transition-fast);
+}
+
+/* Exclude elements that shouldn't transition */
+.card,
+.btn,
+.input,
+.transaction-item {
+  transition: all var(--transition-fast);
+}
+
+/* ============================================
+   CHART THEME ADAPTATIONS
+   ============================================ */
+
+[data-theme="dark"] canvas {
+  filter: brightness(0.95);
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) var(--color-surface);
+}
+
+/* ============================================
+   ACCESSIBILITY - High Contrast Mode
+   ============================================ */
+
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: hsl(220 20% 40%);
+  }
+  
+  .card,
+  .input,
+  .btn--secondary {
+    border-width: 2px;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY - Reduced Motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .section {
+    animation: none;
+  }
+  
+  .card-value {
+    transition: none;
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .navigation,
+  .btn,
+  .period-filters,
+  #toast-container {
+    display: none !important;
+  }
+  
+  .main {
+    margin-left: 0;
+    padding: 0;
+  }
+  
+  .section {
+    display: block !important;
+    page-break-after: always;
+  }
+  
+  .card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
+
+/* ============================================
+   FOCUS VISIBLE IMPROVEMENTS
+   ============================================ */
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Remove focus outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ============================================
+   SELECTION STYLING
+   ============================================ */
+
+::selection {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+[data-theme="dark"] ::selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* ============================================
+   PLACEHOLDER STYLING
+   ============================================ */
+
+::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+/* ============================================
+   DATE INPUT STYLING
+   ============================================ */
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: var(--color-text-muted);
+  cursor: pointer;
+}
+
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
