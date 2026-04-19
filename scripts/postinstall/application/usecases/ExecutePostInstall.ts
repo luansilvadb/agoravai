@@ -35,9 +35,9 @@ export class ExecutePostInstall {
         label: 'Windsurf Workflows',
       },
       {
-        source: path.join(packageRoot, 'openspec', 'changes'),
-        target: path.join(userProjectRoot, 'openspec', 'changes'),
-        label: 'OpenSpec Changes',
+        source: path.join(packageRoot, 'specskill', 'changes'),
+        target: path.join(userProjectRoot, 'specskill', 'changes'),
+        label: 'SpecSkill Changes',
       },
       {
         source: path.join(packageRoot, '.rag', 'context'),
