@@ -1,10 +1,15 @@
 # Dependencies
 node_modules/
 
+# Build and Coverage
+dist/
+coverage/
+
 # RAG Cache and Generated Files
 .rag/cache/
 .rag/research/skills.md
 .rag/output/
+scripts/rag-skills.js.bak
 
 # Agent and IDE State
 .agent/
