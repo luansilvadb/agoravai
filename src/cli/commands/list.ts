@@ -1,4 +1,6 @@
-import { listDirs, pathExists } from '../utils/fs-utils.js';
+import { Container, TOKENS } from '../infrastructure/index.js';
+import type { ChangeRepository } from '../domain/repositories.js';
+import { MESSAGES } from '../constants.js';
 
 interface ChangeInfo {
   name: string;
@@ -12,37 +14,25 @@ interface ListOutput {
 export async function listCommand(options: Record<string, string | boolean>): Promise<void> {
   const jsonOutput = options.json === true;
   const activeOnly = options.active === true;
-  
-  if (!pathExists('specskill/changes')) {
-    if (jsonOutput) {
-      console.log(JSON.stringify({ changes: [] }, null, 2));
-    } else {
-      console.log(activeOnly ? 'No active changes found.' : 'No changes found.');
-    }
-    return;
-  }
 
-  const allChanges = await listDirs('specskill/changes');
-  const activeChanges = allChanges.filter(c => c !== 'archive');
-  
-  // Se --active, mostra só ativas. Senão, mostra todas
-  const changesToShow = activeOnly ? activeChanges : allChanges.filter(c => c !== 'archive' || pathExists(`specskill/changes/archive/${c}`));
+  const container = Container.getInstance();
+  const repository = container.resolve<ChangeRepository>(TOKENS.CHANGE_REPOSITORY);
+
+  const changes = await repository.list();
 
   if (jsonOutput) {
     const result: ListOutput = {
-      changes: changesToShow.map(name => ({ name, schema: 'spec-driven' }))
+      changes: changes.map(name => ({ name, schema: 'spec-driven' }))
     };
     console.log(JSON.stringify(result, null, 2));
   } else {
-    if (changesToShow.length === 0) {
-      console.log(activeOnly ? 'No active changes found.' : 'No changes found.');
+    if (changes.length === 0) {
+      console.log(MESSAGES.INFO_NO_CHANGES());
     } else {
       const label = activeOnly ? 'Active changes' : 'Changes';
       console.log(`${label}:`);
-      for (const change of changesToShow) {
-        const isArchived = !activeChanges.includes(change);
-        const status = isArchived ? ' [ARCHIVED]' : '';
-        console.log(`  - ${change}${status}`);
+      for (const change of changes) {
+        console.log(`  - ${change}`);
       }
     }
   }

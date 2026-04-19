@@ -11,10 +11,6 @@ triggers:
   - "archive change"
   - "concluir change"
   - "/archive-change"
-scope:
-  primary: ["specskill", "change lifecycle", "archive"]
-  delegates: ["specskill-sync-specs para sincronização de specs", "specskill-create-change para criação de nova change"]
-quality_bar: high
 ---
 
 # SPECSKILL ARCHIVE CHANGE — Arquivamento seguro de changes concluídas
@@ -55,7 +51,7 @@ quality_bar: high
 - Criar nova change → use `specskill-create-change`
 - Sincronizar specs sem arquivar → use `specskill-sync-specs`
 - Listar changes sem intenção de arquivar → responda diretamente com `npm run specskill:list -- --json`
-- Reverter arquivamento → responda diretamente com `mv specskill/changes/archive/<name> specskill/changes/<name>`
+- Reverter arquivamento → responda diretamente com `mv specskill/archive/<name> specskill/changes/<name>`
 
 ---
 
@@ -92,7 +88,7 @@ quality_bar: high
      - Erro de CLI não encontrado: falhar com "CLI não está instalado ou não está no PATH"
      - JSON inválido: falhar com "Output de change:list não é JSON válido. Stderr: <stderr>"
      - Exit code != 0: falhar com "change:list retornou erro (exit <code>): <stderr>"
-1.3. Filtrar a lista para changes ativas (excluir as que estão em specskill/changes/archive/).
+1.3. Filtrar a lista para changes ativas (excluir as que estão em specskill/archive/).
 1.4. [CASO DE EXCEÇÃO] Se nenhuma change ativa encontrada:
      - Informar "Nenhuma change ativa para arquivar."
      - Parar execução aqui.
@@ -231,22 +227,22 @@ quality_bar: high
 
 ```
 5.1. Criar diretório de archive (idempotente):
-     mkdir -p specskill/changes/archive
+     - `mkdir -p specskill/archive`
 5.2. [RESILIÊNCIA] Se mkdir falhar:
      - Falhar com "Não foi possível criar diretório de archive: <motivo>. Verifique permissões."
 5.3. Gerar nome do destino: YYYY-MM-DD-<CHANGE_NAME>
      - Usar data atual no fuso do sistema
-5.4. Construir caminho completo: specskill/changes/archive/<DEST_NAME>
+5.4. Construir caminho completo: specskill/archive/<DEST_NAME>
 5.5. [CASO DE EXCEÇÃO] Se destino já existe:
      - Falhar com erro explícito:
-       "Já existe um archive com este nome: specskill/changes/archive/<DEST_NAME>/
+       "Já existe um archive com este nome: specskill/archive/<DEST_NAME>/
         Opções:
         - Renomear o archive existente manualmente
         - Aguardar até amanhã para um nome de data diferente
         - Especificar um sufixo diferente para a change"
      - NÃO sobrescrever. NÃO renomear automaticamente. Parar execução.
 5.6. Executar movimentação:
-     mv specskill/changes/<CHANGE_NAME> specskill/changes/archive/<DEST_NAME>
+     - `mv specskill/changes/<CHANGE_NAME> specskill/archive/YYYY-MM-DD-<CHANGE_NAME>`
 5.7. [RESILIÊNCIA] Se mv falhar:
      - Permissão negada: falhar com "Sem permissão para mover. Execute com permissões adequadas ou verifique ownership."
      - Dispositivo cheio: falhar com "Disco cheio. Libere espaço antes de arquivar."
@@ -258,7 +254,7 @@ quality_bar: high
 5.9. Prosseguir para PASSO 6.
 ```
 
-**Critério de conclusão**: Diretório movido com sucesso para `specskill/changes/archive/<DEST_NAME>/`.
+**Critério de conclusão**: Diretório movido com sucesso para `specskill/archive/YYYY-MM-DD-<CHANGE_NAME>/`.
 
 ---
 
@@ -271,14 +267,14 @@ quality_bar: high
 
 **Change:** <CHANGE_NAME>
 **Schema:** <SCHEMA_NAME>
-**Archived to:** specskill/changes/archive/<DEST_NAME>/
+**Archived to:** specskill/archive/YYYY-MM-DD-<CHANGE_NAME>/
 **Specs:** <status de sync>
 **Artifacts:** <status>
 **Tasks:** <status>
 
 [Se houve warnings, adicionar seção:]
 
-### ⚠ Warnings
+### Warnings
 - <warning 1>
 - <warning 2>
 
@@ -308,7 +304,7 @@ quality_bar: high
 **Regra**: Sempre validar a estrutura do JSON antes de acessar campos. Nunca assuma que o output está no formato esperado.
 
 ```bash
-# ✅ PASS — Valida antes de usar
+# PASS — Valida antes de usar
 STATUS_JSON=$(npm run specskill:status -- --change "$NAME" --json 2>/tmp/change-err)
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
@@ -318,7 +314,7 @@ fi
 SCHEMA=$(echo "$STATUS_JSON" | jq -r '.schemaName // "desconhecido"')
 ARTIFACTS=$(echo "$STATUS_JSON" | jq -r '.artifacts // []')
 
-# ❌ FAIL — Acesso direto sem validação
+# FAIL — Acesso direto sem validação
 STATUS_JSON=$(npm run specskill:status -- --change "$NAME" --json)
 SCHEMA=$(echo "$STATUS_JSON" | jq -r '.schemaName')
 # Se .schemaName não existir, jq retorna "null" silenciosamente
@@ -333,11 +329,11 @@ SCHEMA=$(echo "$STATUS_JSON" | jq -r '.schemaName')
 **Regra**: Usar grep com regex estrito. Não confiar em heurísticas de formatação.
 
 ```bash
-# ✅ PASS — Regex estrito para checkboxes
+# PASS — Regex estrito para checkboxes
 INCOMPLETE=$(grep -cE '^\s*- \[ \]' tasks.md 2>/dev/null || echo 0)
 COMPLETE=$(grep -cE '^\s*- \[[xX]\]' tasks.md 2>/dev/null || echo 0)
 
-# ❌ FAIL — Regex frouxo que captura falsos positivos
+# FAIL — Regex frouxo que captura falsos positivos
 INCOMPLETE=$(grep -c '\[ \]' tasks.md)
 # Captura: "veja [ ] abaixo", "- [ ]", "  - [ ]  ", mas também comentários com brackets
 ```
@@ -351,7 +347,7 @@ INCOMPLETE=$(grep -c '\[ \]' tasks.md)
 **Regra**: Comparar por conteúdo normalizado (trim de whitespace, trailing newlines). Não comparar por timestamp ou metadata de arquivo.
 
 ```bash
-# ✅ PASS — Normaliza antes de comparar
+# PASS — Normaliza antes de comparar
 normalize() {
   sed 's/[[:space:]]*$//' "$1" | sed '/^$/d'
 }
@@ -361,7 +357,7 @@ else
   echo "MODIFIED"
 fi
 
-# ❌ FAIL — diff direto sem normalização
+# FAIL — diff direto sem normalização
 if diff delta.md main.md > /dev/null 2>&1; then
   echo "SYNCED"
 fi
@@ -377,22 +373,22 @@ fi
 **Regra**: Usar `mv` nativo do filesystem (same-device). Nunca cp+rm. Validar pós-move.
 
 ```bash
-# ✅ PASS — mv + validação pós-move
-mv "specskill/changes/$NAME" "specskill/changes/archive/$DEST" 2>/tmp/mv-err
+# PASS — mv + validação pós-move
+mv "specskill/changes/$NAME" "specskill/archive/$DEST" 2>/tmp/mv-err
 if [ $? -ne 0 ]; then
   echo "ERRO: mv falhou: $(cat /tmp/mv-err)"
   exit 1
 fi
-if [ ! -d "specskill/changes/archive/$DEST" ]; then
+if [ ! -d "specskill/archive/$DEST" ]; then
   echo "ERRO CRÍTICO: mv retornou sucesso mas destino não existe"
   exit 1
 fi
-if [ ! -f "specskill/changes/archive/$DEST/.specskill.yaml" ]; then
+if [ ! -f "specskill/archive/$DEST/.specskill.yaml" ]; then
   echo "WARNING: .specskill.yaml ausente no archive"
 fi
 
-# ❌ FAIL — cp + rm sem validação
-cp -r "specskill/changes/$NAME" "specskill/changes/archive/$DEST"
+# FAIL — cp + rm sem validação
+cp -r "specskill/changes/$NAME" "specskill/archive/$DEST"
 rm -rf "specskill/changes/$NAME"
 # Race condition: se cp falhar parcialmente, rm apaga o original
 ```
@@ -406,7 +402,7 @@ rm -rf "specskill/changes/$NAME"
 **Regra**: Sempre capturar stderr separadamente. Nunca mesclar stderr com stdout para parsing.
 
 ```bash
-# ✅ PASS — Stderr separado
+# PASS — Stderr separado
 OUTPUT=$(npm run specskill:list -- --json 2>/tmp/change-stderr)
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
@@ -414,7 +410,7 @@ if [ $EXIT_CODE -ne 0 ]; then
   exit 1
 fi
 
-# ❌ FAIL — Stderr no mesmo stream
+# FAIL — Stderr no mesmo stream
 OUTPUT=$(npm run specskill:list -- --json 2>&1)
 # Se houver warnings em stderr, elas contaminam o JSON
 ```
@@ -428,10 +424,10 @@ OUTPUT=$(npm run specskill:list -- --json 2>&1)
 **Regra**: Usar date do sistema, formato ISO 8601 (YYYY-MM-DD), sem timezone.
 
 ```bash
-# ✅ PASS — Format explícito
+# PASS — Format explícito
 DEST_NAME="$(date +%Y-%m-%d)-${CHANGE_NAME}"
 
-# ❌ FAIL — Format dependente de locale
+# FAIL — Format dependente de locale
 DEST_NAME="$(date)-${CHANGE_NAME}"
 # Pode gerar "Thu Jan 15 14:30:00 BRT 2025-my-change"
 ```
@@ -504,14 +500,14 @@ Antes de considerar o arquivamento completo, confirme:
 [Filesystem]: specskill/changes/auth-refactor/specs/ não encontrado
 [Modelo]: Nenhum delta spec para sincronizar.
 
-[CLI]: mv specskill/changes/auth-refactor specskill/changes/archive/2025-01-15-auth-refactor
+[CLI]: mv specskill/changes/auth-refactor specskill/archive/2025-01-15-auth-refactor
 
 [Modelo]:
 ## Archive Complete
 
 **Change:** auth-refactor
 **Schema:** default
-**Archived to:** specskill/changes/archive/2025-01-15-auth-refactor/
+**Archived to:** specskill/archive/2025-01-15-auth-refactor/
 **Specs:** No delta specs
 **Artifacts:** ✓ All complete
 **Tasks:** No tasks file
@@ -584,14 +580,14 @@ Delta specs precisam de sincronização. Deseja:
 [Task tool]: Invoca specskill-sync-specs para api-v2...
 [Resultado]: Sync concluído com sucesso
 
-[CLI]: mv specskill/changes/api-v2 specskill/changes/archive/2025-01-15-api-v2
+[CLI]: mv specskill/changes/api-v2 specskill/archive/2025-01-15-api-v2
 
 [Modelo]:
 ## Archive Complete
 
 **Change:** api-v2
 **Schema:** extended
-**Archived to:** specskill/changes/archive/2025-01-15-api-v2/
+**Archived to:** specskill/archive/2025-01-15-api-v2/
 **Specs:** ✓ Synced to main specs
 **Artifacts:** ⚠ 2 incomplete (confirmed by user)
 **Tasks:** ⚠ 3/15 incomplete (confirmed by user)
@@ -619,16 +615,16 @@ change:list CLI não está instalado ou não está no PATH.
 
 ### Cenário D — Destino de archive já existe
 ```
-[CLI]: ls specskill/changes/archive/2025-01-15-auth-refactor
+[CLI]: ls specskill/archive/2025-01-15-auth-refactor
 [Output]: (diretório existe)
 
 [Modelo]:
 ## ERRO
 
-Já existe um archive com este nome: specskill/changes/archive/2025-01-15-auth-refactor/
+Já existe um archive com este nome: specskill/archive/2025-01-15-auth-refactor/
 
 **Opções:**
-- Renomear o archive existente manualmente: `mv specskill/changes/archive/2025-01-15-auth-refactor specskill/changes/archive/2025-01-15-auth-refactor-v2`
+- Renomear o archive existente manualmente: `mv specskill/archive/2025-01-15-auth-refactor specskill/archive/2025-01-15-auth-refactor-v2`
 - Aguardar até amanhã para obter um nome de data diferente
 - Se a change original ainda existe em outro local, verifique se já foi arquivada
 

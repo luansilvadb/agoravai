@@ -1,6 +1,9 @@
+import { Container, TOKENS } from '../infrastructure/index.js';
+import type { ChangeRepository } from '../domain/repositories.js';
 import { getChangePath } from '../utils/config.js';
 import { pathExists, readFile, writeFile, ensureDir } from '../utils/fs-utils.js';
 import { join } from 'path';
+import { MESSAGES, EXIT_CODES } from '../constants.js';
 
 interface DetectedSpec {
   id: string;
@@ -9,12 +12,12 @@ interface DetectedSpec {
   suggestedSections: string[];
 }
 
-// Analisar conteúdo da change para detectar capabilities necessárias
+// Analyze change content to detect needed capabilities
 async function analyzeChangeContext(changePath: string): Promise<DetectedSpec[]> {
   const detected: DetectedSpec[] = [];
   const specsDir = join(changePath, 'specs');
 
-  // Ler todos os artefatos para contexto
+  // Read all artifacts for context
   const [tasksContent, proposalContent, designContent] = await Promise.all([
     readFile(join(changePath, 'tasks.md')),
     readFile(join(changePath, 'proposal.md')),
@@ -23,7 +26,7 @@ async function analyzeChangeContext(changePath: string): Promise<DetectedSpec[]>
 
   const fullContext = `${tasksContent || ''} ${proposalContent || ''} ${designContent || ''}`.toLowerCase();
 
-  // Detectar capabilities baseado em keywords dinâmicas
+  // Detect capabilities based on dynamic keywords
   const patterns: Array<{ keywords: string[]; id: string; name: string; sections: string[] }> = [
     { 
       keywords: ['config', 'validation', 'schema', 'zod'], 
@@ -90,7 +93,7 @@ async function analyzeChangeContext(changePath: string): Promise<DetectedSpec[]>
   for (const pattern of patterns) {
     const specPath = join(specsDir, pattern.id, 'spec.md');
     
-    // Só sugere se não existe e se detecta keywords
+    // Only suggest if doesn't exist and keywords are detected
     if (!pathExists(specPath) && pattern.keywords.some(k => fullContext.includes(k))) {
       detected.push({
         id: pattern.id,
@@ -101,16 +104,16 @@ async function analyzeChangeContext(changePath: string): Promise<DetectedSpec[]>
     }
   }
 
-  // Detectar specs genéricas baseadas em tasks complexas
+  // Detect generic specs based on complex tasks
   if (tasksContent) {
     const tasks = tasksContent.split('\n').filter(t => t.trim().startsWith('- ['));
     for (const task of tasks) {
-      // Se task parece complexa (menciona múltiplos conceitos), sugere spec dedicada
+      // If task seems complex (mentions multiple concepts), suggest dedicated spec
       const taskLower = task.toLowerCase();
       const hasComplexTerms = ['implement', 'create', 'design', 'refactor'].some(t => taskLower.includes(t));
       
       if (hasComplexTerms && task.length > 50) {
-        // Extrair nome da spec da task (primeiras 3-4 palavras significativas)
+        // Extract spec name from task (first 3-4 significant words)
         const words = task.replace(/- \[ \] /, '').replace(/- \[x\] /, '').split(' ').slice(0, 4);
         const specId = words.map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '-')).join('-').replace(/-+/g, '-').replace(/^-|-$/g, '');
         
@@ -138,7 +141,7 @@ async function generateSpec(changePath: string, detected: DetectedSpec, changeNa
 
   await ensureDir(specDir);
 
-  // Template dinâmico baseado na detecção
+  // Dynamic template based on detection
   const sections = detected.suggestedSections.map(s => `## ${s}\n\n`).join('\n');
   
   const content = `# ${detected.name}
@@ -147,9 +150,9 @@ async function generateSpec(changePath: string, detected: DetectedSpec, changeNa
 
 ## Overview
 
-Especificação para: **${detected.name}**
+Specification for: **${detected.name}**
 
-Parte da change: \`${changeName}\`
+Part of change: \`${changeName}\`
 
 ${sections}
 ## Dependencies
@@ -166,7 +169,7 @@ ${sections}
 
 ## Notes
 
-<!-- Adicione notas conforme necessário -->
+<!-- Add notes as needed -->
 `;
 
   await writeFile(specPath, content);
@@ -178,18 +181,23 @@ export async function generateCommand(options: Record<string, string | boolean>)
   const autoGenerate = options.auto === true;
 
   if (!changeName) {
-    console.error('Erro: --change <name> é obrigatório');
-    process.exit(1);
+    console.error('Error: <name> is required');
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const container = Container.getInstance();
+  const repository = container.resolve<ChangeRepository>(TOKENS.CHANGE_REPOSITORY);
+
+  const change = await repository.getChange(changeName);
+
+  if (!change) {
+    console.error(`✖ Error: ${MESSAGES.ERROR_CHANGE_NOT_FOUND(changeName)}`);
+    process.exit(EXIT_CODES.NOT_FOUND);
   }
 
   const changePath = getChangePath(changeName);
 
-  if (!pathExists(changePath)) {
-    console.error(`✖ Error: Change '${changeName}' not found`);
-    process.exit(1);
-  }
-
-  // Analisar contexto e detectar specs necessárias dinamicamente
+  // Analyze context and dynamically detect needed specs
   const specsNeeded = await analyzeChangeContext(changePath);
 
   if (specsNeeded.length === 0) {
@@ -201,7 +209,7 @@ export async function generateCommand(options: Record<string, string | boolean>)
     return;
   }
 
-  // Auto-generate ou listar
+  // Auto-generate or list
   const generated: string[] = [];
 
   for (const template of specsNeeded) {

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { Command } from 'commander';
+import { z } from 'zod';
 import { newChangeCommand } from './commands/new-change.js';
 import { statusCommand } from './commands/status.js';
 import { listCommand } from './commands/list.js';
@@ -8,97 +10,128 @@ import { continueCommand } from './commands/continue.js';
 import { archiveCommand } from './commands/archive.js';
 import { existsCommand } from './commands/exists.js';
 import { generateCommand } from './commands/generate.js';
+import { registerDefaults } from './infrastructure/index.js';
 
-const args = process.argv.slice(2);
-const command = args[0];
+registerDefaults();
 
-if (!command) {
-  console.log('SpecSkill CLI - Gerenciamento de Changes');
-  console.log('');
-  console.log('Uso: specskill <comando> [opções]');
-  console.log('');
-  console.log('Comandos:');
-  console.log('  new change <name> [--schema <schema>]  Cria uma nova change');
-  console.log('  status --change <name> [--json]        Mostra status de uma change');
-  console.log('  list [--json] [--active]               Lista changes');
-  console.log('  instructions <id> --change <name>        Mostra instruções de um artefato');
-  console.log('  apply --change <name> [--json]         Aplica tarefas de uma change');
-  console.log('  continue [<name>]                      Continua uma change bloqueada');
-  console.log('  archive --change <name> [--json]        Arquiva uma change completa');
-  console.log('  exists <name> [--json]                 Verifica se change existe');
-  console.log('  generate --change <name> [--auto]      Gera specs adicionais automaticamente');
-  console.log('');
-  console.log('Opções globais:');
-  console.log('  --change <name>       Nome da change');
-  console.log('  --schema <schema>     Schema da change (spec-driven, minimal)');
-  console.log('  --json                Saída em formato JSON');
-  console.log('  --active              Mostra apenas changes ativas (não arquivadas)');
-  process.exit(0);
+const program = new Command();
+
+program
+  .name('specskill')
+  .description('Spec-driven change management CLI')
+  .version('1.0.10');
+
+program
+  .command('new')
+  .alias('create')
+  .description('Create a new change')
+  .argument('[type]', 'Type (must be "change")')
+  .argument('<name>', 'Change name')
+  .option('-s, --schema <schema>', 'Schema type (spec-driven, minimal)', 'spec-driven')
+  .option('--dry-run', 'Preview changes without applying')
+  .action(async (type, name, options) => {
+    // Support both: 'specskill new <name>' and 'specskill new change <name>'
+    if (type && type !== 'change') {
+      console.error(`Invalid type '${type}'. Expected 'change'`);
+      process.exit(1);
+    }
+    await newChangeCommand(name, options);
+  });
+
+program
+  .command('exists')
+  .description('Check if a change exists')
+  .argument('<name>', 'Change name')
+  .option('--json', 'Output as JSON')
+  .action(async (name, options) => {
+    await existsCommand({ name, ...options });
+  });
+
+program
+  .command('status')
+  .description('Show change status')
+  .argument('<name>', 'Change name')
+  .option('--json', 'Output as JSON')
+  .action(async (name, options) => {
+    await statusCommand({ change: name, ...options });
+  });
+
+program
+  .command('list')
+  .description('List all changes')
+  .option('--json', 'Output as JSON')
+  .option('--active', 'Show only active changes')
+  .action(async (options) => {
+    await listCommand(options);
+  });
+
+program
+  .command('instructions')
+  .description('Show instructions for an artifact')
+  .argument('<name>', 'Change name')
+  .argument('[id]', 'Artifact ID (apply, spec, etc.)', 'apply')
+  .option('--json', 'Output as JSON')
+  .action(async (name, id, options) => {
+    await instructionsCommand({ change: name, id, ...options });
+  });
+
+program
+  .command('apply')
+  .description('Apply pending tasks from a change')
+  .argument('<name>', 'Change name')
+  .option('--json', 'Output as JSON')
+  .option('--dry-run', 'Preview changes without applying')
+  .option('-s, --spec <filter>', 'Filter by spec ID')
+  .action(async (name, options) => {
+    await applyCommand({ change: name, ...options });
+  });
+
+program
+  .command('continue')
+  .description('Continue a blocked change')
+  .argument('[name]', 'Change name (optional)')
+  .action(async (name) => {
+    await continueCommand({ name });
+  });
+
+program
+  .command('archive')
+  .description('Archive a completed change')
+  .argument('<name>', 'Change name')
+  .option('--json', 'Output as JSON')
+  .option('--dry-run', 'Preview changes without applying')
+  .action(async (name, options) => {
+    await archiveCommand({ change: name, ...options });
+  });
+
+program
+  .command('generate')
+  .description('Generate additional specs automatically')
+  .argument('<name>', 'Change name')
+  .option('--auto', 'Auto-generate without prompting')
+  .option('--json', 'Output as JSON')
+  .action(async (name, options) => {
+    await generateCommand({ change: name, ...options });
+  });
+
+function formatZodError(error: z.ZodError): string {
+  return error.issues.map((issue) => {
+    const path = issue.path.length > 0 ? issue.path.join('.') : 'value';
+    return `  - ${path}: ${issue.message}`;
+  }).join('\n');
 }
 
-async function main() {
+async function main(): Promise<void> {
   try {
-    switch (command) {
-      case 'new':
-        if (args[1] === 'change') {
-          await newChangeCommand(args[2], parseArgs(args.slice(3)));
-        } else {
-          console.error('Uso: specskill new change <name> [--schema <schema>]');
-          process.exit(1);
-        }
-        break;
-      case 'exists':
-        await existsCommand(parseArgs(args.slice(1)));
-        break;
-      case 'status':
-        await statusCommand(parseArgs(args.slice(1)));
-        break;
-      case 'list':
-        await listCommand(parseArgs(args.slice(1)));
-        break;
-      case 'instructions':
-        await instructionsCommand(parseArgs(args.slice(1)));
-        break;
-      case 'apply':
-        await applyCommand(parseArgs(args.slice(1)));
-        break;
-      case 'continue':
-        await continueCommand(parseArgs(args.slice(1)));
-        break;
-      case 'archive':
-        await archiveCommand(parseArgs(args.slice(1)));
-        break;
-      case 'generate':
-        await generateCommand(parseArgs(args.slice(1)));
-        break;
-      default:
-        console.error(`Comando desconhecido: ${command}`);
-        console.error('Use "specskill" sem argumentos para ver os comandos disponíveis.');
-        process.exit(1);
-    }
+    await program.parseAsync(process.argv);
   } catch (error) {
-    console.error('Erro:', error instanceof Error ? error.message : error);
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:\n' + formatZodError(error));
+    } else {
+      console.error('Error:', error instanceof Error ? error.message : error);
+    }
     process.exit(1);
   }
-}
-
-function parseArgs(args: string[]): Record<string, string | boolean> {
-  const options: Record<string, string | boolean> = {};
-  for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith('--')) {
-      const key = args[i].slice(2);
-      if (i + 1 < args.length && !args[i + 1].startsWith('--')) {
-        options[key] = args[i + 1];
-        i++;
-      } else {
-        options[key] = true;
-      }
-    } else {
-      options['_args'] = options['_args'] || '';
-      options['_args'] += (options['_args'] ? ' ' : '') + args[i];
-    }
-  }
-  return options;
 }
 
 main();

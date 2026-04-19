@@ -1,51 +1,52 @@
-import { CONFIG, getChangePath } from '../utils/config.js';
+import { Container, TOKENS } from '../infrastructure/index.js';
+import type { ChangeRepository } from '../domain/repositories.js';
+import { getChangePath, CONFIG } from '../utils/config.js';
 import { pathExists, listDirs } from '../utils/fs-utils.js';
 import { join } from 'path';
+import { MESSAGES, EXIT_CODES } from '../constants.js';
 
 export async function continueCommand(options: Record<string, string | boolean>): Promise<void> {
-  const changeName = options._args as string || options.change as string;
-  
-  if (!changeName) {
-    // Listar changes disponíveis
-    if (!pathExists('specskill/changes')) {
-      console.log('No changes found.');
-      return;
-    }
+  const changeName = options.name as string;
 
-    const allChanges = await listDirs('specskill/changes');
-    const activeChanges = allChanges.filter(c => c !== 'archive');
-    
-    if (activeChanges.length === 0) {
-      console.log('No active changes found.');
+  const container = Container.getInstance();
+  const repository = container.resolve<ChangeRepository>(TOKENS.CHANGE_REPOSITORY);
+
+  if (!changeName) {
+    // List available changes
+    const changes = await repository.list();
+
+    if (changes.length === 0) {
+      console.log(MESSAGES.INFO_NO_CHANGES());
     } else {
-      console.log('Active changes (use: npm run specskill:continue -- <name>):');
-      for (const change of activeChanges) {
+      console.log('Active changes (use: npm run specskill:continue <name>):');
+      for (const change of changes) {
         console.log(`  - ${change}`);
       }
     }
     return;
   }
 
-  const changePath = getChangePath(changeName);
-  
-  if (!pathExists(changePath)) {
-    console.error(`✖ Error: Change '${changeName}' not found`);
-    process.exit(1);
+  const change = await repository.getChange(changeName);
+
+  if (!change) {
+    console.error(`✖ Error: ${MESSAGES.ERROR_CHANGE_NOT_FOUND(changeName)}`);
+    process.exit(EXIT_CODES.NOT_FOUND);
   }
 
   console.log(`Continuing change: ${changeName}`);
-  
-  // Verificar artefatos faltantes
+
+  const changePath = getChangePath(changeName);
+
+  // Check missing artifacts
   const schema = CONFIG.SCHEMAS[CONFIG.DEFAULT_SCHEMA];
   const missingArtifacts: string[] = [];
-  
-  // Helper para obter caminho do artefato
+
   const getArtifactPath = (name: string): string => {
-    return name === 'specs' 
+    return name === 'specs'
       ? join(changePath, 'specs', 'spec.md')
       : join(changePath, `${name}.md`);
   };
-  
+
   for (const artifact of schema.artifacts) {
     const artifactPath = getArtifactPath(artifact);
     if (!pathExists(artifactPath)) {
@@ -53,7 +54,7 @@ export async function continueCommand(options: Record<string, string | boolean>)
     }
   }
 
-  // Verificar specs granulares
+  // Check granular specs
   const specsDir = join(changePath, 'specs');
   let granularSpecs: string[] = [];
   if (pathExists(specsDir)) {
@@ -71,7 +72,7 @@ export async function continueCommand(options: Record<string, string | boolean>)
     console.log('To generate missing artifacts, use the propose workflow.');
   } else {
     console.log('✓ All artifacts exist.');
-    
+
     if (granularSpecs.length > 0) {
       console.log('');
       console.log(`Found ${granularSpecs.length} granular specs:`);
@@ -82,11 +83,11 @@ export async function continueCommand(options: Record<string, string | boolean>)
         console.log(`  ... and ${granularSpecs.length - 5} more`);
       }
     }
-    
+
     console.log('');
-    console.log('Use npm run specskill:apply -- --change ' + changeName + ' to start implementing.');
+    console.log('Use npm run specskill:apply ' + changeName + ' to start implementing.');
     if (granularSpecs.length > 0) {
-      console.log('Or apply a specific spec: npm run specskill:apply -- --change ' + changeName + ' --spec <spec-id>');
+      console.log('Or apply a specific spec: npm run specskill:apply ' + changeName + ' --spec <spec-id>');
     }
   }
 }

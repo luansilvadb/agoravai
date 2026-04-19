@@ -71,7 +71,7 @@ tests/
 │  (RAGOrchestrator, ResultMatcher)   │
 ├─────────────────────────────────────┤
 │            Domain                   │
-│  (Entities, Interfaces, Errors)       │
+│  (Entities, Interfaces, Errors)     │
 └─────────────────────────────────────┘
 ```
 
@@ -80,6 +80,56 @@ tests/
 - **Application** conhece Domain mas não Infrastructure
 - **Infrastructure** implementa interfaces do Domain
 - **Injeção de Dependências**: Todas as dependências passadas via construtor
+
+## 🖥️ CLI Architecture (Specskill)
+
+Spec-driven change management CLI with layered architecture:
+
+```
+┌─────────────────────────────────────────┐
+│           CLI Commands                  │
+│  (new, status, apply, archive...)     │
+├─────────────────────────────────────────┤
+│         Validation Layer              │
+│  (Zod schemas, Cycle detection)       │
+├─────────────────────────────────────────┤
+│      Repository Pattern                 │
+│  (ChangeRepository, FileSystemPort)     │
+├─────────────────────────────────────────┤
+│      Infrastructure (DI Container)      │
+│  (FsChangeRepository, ZodValidator)     │
+└─────────────────────────────────────────┘
+```
+
+### CLI Commands
+
+```bash
+# Create a new change
+npm run specskill:new my-change
+
+# Check status
+npm run specskill:status -- --change my-change
+
+# Apply pending tasks
+npm run specskill:apply -- --change my-change
+
+# Archive completed change
+npm run specskill:archive -- --change my-change
+
+# List all changes
+npm run specskill:list
+
+# All commands support --dry-run for preview
+npm run specskill:archive -- --change my-change --dry-run
+```
+
+### Key Components
+
+- **Repository Pattern**: `ChangeRepository` and `GlobalConfigRepository` interfaces with file-system implementations
+- **DI Container**: Simple singleton container with dependency injection and test overrides
+- **Zod Validation**: Schema validation for all YAML configs with typed error messages
+- **Parallel I/O**: Batch file operations with concurrency control
+- **Cycle Detection**: DFS-based algorithm for dependency validation
 
 ## ⚙️ Configuração (Environment Variables)
 

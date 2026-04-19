@@ -13,13 +13,6 @@ triggers:
   - "/specskill:apply"
   - "specskill apply"
   - "retomar change"
-scope:
-  primary: ["specskill workflow", "task implementation", "build verification"]
-  delegates:
-    - "specskill-continue-change para gerar artefatos ausentes"
-    - "specskill-archive-change para arquivar change completa"
-    - "specskill-create-change para criar nova change"
-quality_bar: high
 ---
 
 # SPECSKILL APPLY CHANGE — Da tarefa ao build validado
@@ -112,7 +105,7 @@ quality_bar: high
 
 3. **Obter status**:
    ```bash
-   npm run specskill:status -- --change "<name>" --json
+   npm run specskill:status "<name>" --json
    ```
 
    **Parse obrigatório** — extraia:
@@ -128,7 +121,7 @@ quality_bar: high
 
 4. **Obter instruções de apply**:
    ```bash
-   npm run specskill:instructions -- apply --change "<name>" --json
+   npm run specskill:instructions "<name>" apply --json
    ```
 
    **Parse obrigatório** — extraia:
@@ -302,7 +295,7 @@ quality_bar: high
 
 ```bash
 # ✅ PASS — valida exit code E integridade do JSON
-OUTPUT=$(npm run specskill:status -- --change "feat-login" --json 2>&1)
+OUTPUT=$(npm run specskill:status "feat-login" --json 2>&1)
 if [ $? -ne 0 ]; then
   echo "ERRO: CLI falhou com exit code $?"
   echo "$OUTPUT"
@@ -315,7 +308,7 @@ echo "$OUTPUT" | jq -e '.schemaName' > /dev/null 2>&1 || {
 }
 
 # ❌ FAIL — pipe direto sem validação
-SCHEMA=$(npm run specskill:status -- --change "feat-login" --json | jq '.schemaName')
+SCHEMA=$(npm run specskill:status "feat-login" --json | jq '.schemaName')
 # Se CLI falhar, $SCHEMA conterá mensagem de erro como string
 # Se JSON for malformado, jq falha silenciosamente e $SCHEMA fica vazia
 ```
@@ -475,7 +468,7 @@ npm ERR! Could not find a package.json
 Antes de declarar "Implementação Completa", confirme:
 
 - [ ] Change selecionada sem ambiguidade (ou ambiguidade resolvida com usuário)
-- [ ] `npm run specskill:status -- --json` parseado sem erro, `schemaName` identificado
+- [ ] `npm run specskill:status "$NAME" --json` parseado sem erro, `schemaName` identificado
 - [ ] `npm run specskill:instructions -- apply --json` parseado sem erro, estado verificado
 - [ ] Tasks file lido com sucesso (arquivo existe e contém tarefas)
 - [ ] Outros `contextFiles` lidos ou ausência registrada com aviso
@@ -493,7 +486,7 @@ Antes de declarar "Implementação Completa", confirme:
 | Precisa de... | Use a skill... |
 |---|---|
 | Gerar artefatos ausentes (proposal, specs, design, tasks) | `npm run specskill:continue` |
-| Criar uma nova change do zero | `npm run specskill:new` |
+| Criar uma nova change do zero | `npm run specskill:new "$NAME" --force` |
 | Arquivar change completa | `npm run specskill:archive` |
 | Listar e inspecionar changes existentes | CLI direto: `npm run specskill:list -- --json` |
 | Padrões de código para a implementação | Skill específica do stack (`frontend-design`, `backend-patterns`, etc.) |
@@ -508,29 +501,29 @@ Progresso: 0/4 tarefas concluídas
 
 Trabalhando na tarefa 1/4: Criar modelo User com campos email, password_hash, created_at
 [...cria src/models/user.ts...]
-✓ Tarefa completa
+ Tarefa completa
 
 Trabalhando na tarefa 2/4: Criar endpoint POST /auth/register
 [...cria src/routes/auth.ts com handler...]
-✓ Tarefa completa
+ Tarefa completa
 
 Trabalhando na tarefa 3/4: Adicionar validação de email no endpoint
 [...adiciona validação no handler existente...]
-✓ Tarefa completa
+ Tarefa completa
 
 Trabalhando na tarefa 4/4: Criar testes unitários para validação de email
 [...cria src/routes/__tests__/auth.test.ts...]
-✓ Tarefa completa
+ Tarefa completa
 
 Verificando build (npm run build)...
-Build passing ✓
+Build passing 
 
 ## Implementação Completa
 
 **Change:** feat-user-auth
 **Schema:** spec-driven
-**Progresso:** 4/4 tarefas concluídas ✓
-**Build:** passing ✓
+**Progresso:** 4/4 tarefas concluídas 
+**Build:** passing 
 
 ### Concluídas nesta sessão
 - [x] Criar modelo User com campos email, password_hash, created_at
@@ -553,15 +546,15 @@ Progresso: 0/3 tarefas concluídas
 
 Trabalhando na tarefa 1/3: Criar serviço PaymentService
 [...cria src/services/PaymentService.ts...]
-✓ Tarefa completa
+ Tarefa completa
 
 Trabalhando na tarefa 2/3: Integrar PaymentService no checkout
 [...modifica src/routes/checkout.ts...]
-✓ Tarefa completa
+ Tarefa completa
 
 Trabalhando na tarefa 3/3: Adicionar tipagem para valor monetário
 [...cria src/types/Money.ts...]
-✓ Tarefa completa
+ Tarefa completa
 
 Verificando build (npm run build)...
 Build falhou (tentativa 1/3):
@@ -578,14 +571,14 @@ Tentando correção automática...
 [...identifica que campo amount está como string mas interface exige number...]
 [...corrige tipo em Money.ts...]
 
-Build passing na tentativa 3 ✓
+Build passing na tentativa 3 
 
 ## Implementação Completa
 
 **Change:** feat-payment
 **Schema:** spec-driven
-**Progresso:** 3/3 tarefas concluídas ✓
-**Build:** passing ✓ (após 3 tentativas de correção)
+**Progresso:** 3/3 tarefas concluídas 
+**Build:** passing (após 3 tentativas de correção)
 
 ### Concluídas nesta sessão
 - [x] Criar serviço PaymentService
@@ -622,8 +615,8 @@ Contradição entre artefatos na tarefa 3:
   Não é possível determinar qual tecnologia usar sem atualizar um dos artefatos.
 
 ### Opções
-1. Atualizar specs.md para RabbitMQ → use npm run specskill:continue -- feat-notification
-2. Atualizar tasks.md para Redis Streams → use npm run specskill:continue -- feat-notification
+1. Atualizar specs.md para RabbitMQ → use npm run specskill:continue feat-notification
+2. Atualizar tasks.md para Redis Streams → use npm run specskill:continue feat-notification
 3. Você me diz qual tecnologia usar e eu atualizo o artefato correto
 
 O que deseja fazer?

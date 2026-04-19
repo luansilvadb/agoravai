@@ -12,10 +12,6 @@ triggers:
   - "gerar lidando com exceções"
   - "build que não quebra silenciosamente"
   - "/resilient-build"
-scope:
-  primary: ["build pipelines", "artifact generation", "error recovery", "graceful degradation"]
-  delegates: ["docx para geração Word", "pdf para geração PDF", "xlsx para planilhas", "pptx para apresentações", "frontend-design para código frontend"]
-quality_bar: high
 ---
 
 # RESILIENT BUILD — Geração de artefatos que não falham silenciosamente

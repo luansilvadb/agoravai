@@ -9,10 +9,6 @@ triggers:
   - "gerar artefato"
   - "resilient build"
   - "/resilient-build"
-scope:
-  primary: ["build pipelines", "artifact generation", "error recovery"]
-  delegates: ["validation", "atomic-io", "resilience"]
-quality_bar: high
 ---
 
 # RESILIENT BUILD — Pipeline de build que não falha silenciosamente

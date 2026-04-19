@@ -1,64 +1,46 @@
+import { Container, TOKENS } from '../infrastructure/index.js';
+import type { ChangeRepository, FileSystemPort } from '../domain/repositories.js';
 import { getChangePath } from '../utils/config.js';
-import { pathExists, readFile, listDirs } from '../utils/fs-utils.js';
+import { pathExists, readFile } from '../utils/fs-utils.js';
 import { join } from 'path';
-
-interface SpecInfo {
-  id: string;
-  name: string;
-  path: string;
-  content: string;
-}
-
-async function loadGranularSpecs(changePath: string): Promise<SpecInfo[]> {
-  const specsDir = join(changePath, 'specs');
-  if (!pathExists(specsDir)) {
-    return [];
-  }
-
-  const specs: SpecInfo[] = [];
-  const dirs = await listDirs(specsDir);
-
-  for (const dir of dirs) {
-    // Ignorar o spec.md principal (não é granular)
-    if (dir === 'spec.md') continue;
-
-    const specPath = join(specsDir, dir, 'spec.md');
-    if (pathExists(specPath)) {
-      const content = await readFile(specPath) || '';
-      // Extrair nome da primeira linha (# Nome)
-      const nameMatch = content.match(/^# (.+)$/m);
-      const name = nameMatch?.[1] ?? dir;
-
-      specs.push({
-        id: dir,
-        name: name.replace(/^# /, ''),
-        path: specPath,
-        content
-      });
-    }
-  }
-
-  return specs;
-}
+import { loadSpecsParallel } from '../utils/parallel-io.js';
+import { MESSAGES, EXIT_CODES } from '../constants.js';
+import { formatSimplePreview } from '../utils/formatters.js';
 
 export async function applyCommand(options: Record<string, string | boolean>): Promise<void> {
   const changeName = options.change as string;
   const jsonOutput = options.json === true;
   const specFilter = options.spec as string | undefined;
+  const dryRun = options.dryRun === true;
 
   if (!changeName) {
-    console.error('Erro: --change <name> é obrigatório');
-    process.exit(1);
+    console.error('Error: <name> is required');
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const container = Container.getInstance();
+  const repository = container.resolve<ChangeRepository>(TOKENS.CHANGE_REPOSITORY);
+
+  const change = await repository.getChange(changeName);
+
+  if (!change) {
+    console.error(`✖ Error: ${MESSAGES.ERROR_CHANGE_NOT_FOUND(changeName)}`);
+    process.exit(EXIT_CODES.NOT_FOUND);
+  }
+
+  if (dryRun) {
+    const specMsg = specFilter ? ` (filtered by: ${specFilter})` : '';
+    console.log(formatSimplePreview(
+      'Apply change tasks',
+      `${changeName}${specMsg}`,
+      ['Read tasks.md', 'Show pending tasks', 'List granular specs']
+    ));
+    return;
   }
 
   const changePath = getChangePath(changeName);
 
-  if (!pathExists(changePath)) {
-    console.error(`✖ Error: Change '${changeName}' not found`);
-    process.exit(1);
-  }
-
-  // Verificar se existe tasks.md
+  // Check if tasks.md exists
   const tasksPath = join(changePath, 'tasks.md');
 
   if (!pathExists(tasksPath)) {
@@ -66,16 +48,16 @@ export async function applyCommand(options: Record<string, string | boolean>): P
       console.log(JSON.stringify({
         error: 'Tasks file not found',
         state: 'blocked',
-        message: 'Use specskill:continue para gerar tasks'
+        message: 'Use specskill:continue to generate tasks'
       }, null, 2));
     } else {
       console.error('✖ Error: tasks.md not found');
-      console.error('Use: npm run specskill:continue -- --change "' + changeName + '"');
+      console.error('Use: npm run specskill:continue ' + changeName);
     }
-    process.exit(1);
+    process.exit(EXIT_CODES.NOT_FOUND);
   }
 
-  // Ler tasks
+  // Read tasks
   const tasksContent = await readFile(tasksPath) || '';
   const lines = tasksContent.split('\n');
 
@@ -95,10 +77,14 @@ export async function applyCommand(options: Record<string, string | boolean>): P
 
   const completeTasks = allTasksCount - pendingTasks.length;
 
-  // Carregar specs granulares
-  const granularSpecs = await loadGranularSpecs(changePath);
+  // Load granular specs using parallel I/O
+  const fs = container.resolve<FileSystemPort>(TOKENS.FILE_SYSTEM);
+  const specsDir = join(changePath, 'specs');
+  const granularSpecs = pathExists(specsDir)
+    ? await loadSpecsParallel(specsDir, fs)
+    : [];
 
-  // Se especificou uma spec, filtrar
+  // Filter if spec specified
   const targetSpecs = specFilter
     ? granularSpecs.filter(s => s.id === specFilter || s.name.toLowerCase().includes(specFilter.toLowerCase()))
     : granularSpecs;
@@ -130,7 +116,7 @@ export async function applyCommand(options: Record<string, string | boolean>): P
     console.log(`Progress: ${completeTasks}/${allTasksCount} tasks complete`);
     console.log('');
 
-    // Mostrar specs granulares disponíveis
+    // Show granular specs available
     if (granularSpecs.length > 0) {
       console.log(`Granular specs available (${granularSpecs.length}):`);
       for (const spec of granularSpecs) {
@@ -154,7 +140,7 @@ export async function applyCommand(options: Record<string, string | boolean>): P
 
     console.log('');
     if (pendingTasks.length === 0) {
-      console.log('✓ All tasks complete! Ready to archive.');
+      console.log(MESSAGES.INFO_ALL_DONE());
     } else {
       console.log('Pending tasks:');
       for (const task of pendingTasks) {
@@ -162,8 +148,8 @@ export async function applyCommand(options: Record<string, string | boolean>): P
       }
       console.log('');
       console.log('Usage:');
-      console.log(`  Apply all:          npm run specskill:apply -- --change ${changeName}`);
-      console.log(`  Apply specific:     npm run specskill:apply -- --change ${changeName} --spec <spec-id>`);
+      console.log(`  Apply all:          npm run specskill:apply ${changeName}`);
+      console.log(`  Apply specific:     npm run specskill:apply ${changeName} --spec <spec-id>`);
     }
   }
 }

@@ -1,6 +1,9 @@
+import { Container, TOKENS } from '../infrastructure/index.js';
+import type { ChangeRepository } from '../domain/repositories.js';
 import { CONFIG, getChangePath } from '../utils/config.js';
 import { pathExists, readFile } from '../utils/fs-utils.js';
 import { join } from 'path';
+import { MESSAGES, EXIT_CODES } from '../constants.js';
 
 interface Instruction {
   artifactId: string;
@@ -30,20 +33,25 @@ interface InstructionsOutput {
 
 export async function instructionsCommand(options: Record<string, string | boolean>): Promise<void> {
   const changeName = options.change as string;
-  const artifactId = options._args as string || 'apply';
+  const artifactId = (options.id as string) || 'apply';
   const jsonOutput = options.json === true;
 
   if (!changeName) {
-    console.error('Erro: --change <name> é obrigatório');
-    process.exit(1);
+    console.error('Error: <name> is required');
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const container = Container.getInstance();
+  const repository = container.resolve<ChangeRepository>(TOKENS.CHANGE_REPOSITORY);
+
+  const change = await repository.getChange(changeName);
+
+  if (!change) {
+    console.error(`✖ Error: ${MESSAGES.ERROR_CHANGE_NOT_FOUND(changeName)}`);
+    process.exit(EXIT_CODES.NOT_FOUND);
   }
 
   const changePath = getChangePath(changeName);
-  
-  if (!pathExists(changePath)) {
-    console.error(`✖ Error: Change '${changeName}' not found`);
-    process.exit(1);
-  }
 
   const schemaName = CONFIG.DEFAULT_SCHEMA;
   const schema = CONFIG.SCHEMAS[schemaName];
@@ -78,7 +86,7 @@ export async function instructionsCommand(options: Record<string, string | boole
           if (isComplete) completeTasks++;
           tasks.push({
             id: `task-${totalTasks}`,
-            desc: match[2],
+            desc: match[2] ?? '',
             status: isComplete ? 'complete' : 'pending'
           });
         }
@@ -127,14 +135,15 @@ export async function instructionsCommand(options: Record<string, string | boole
     const exists = pathExists(artifactPath);
 
     if (jsonOutput) {
+      const deps = schema.dependencies[artifactId as keyof typeof schema.dependencies] ?? [];
       const instruction: Instruction = {
         artifactId,
         template: getTemplateForArtifact(artifactId),
         instruction: getInstructionForArtifact(artifactId, changeName),
         outputPath: artifactPath,
-        dependencies: schema.dependencies[artifactId as keyof typeof schema.dependencies] || [],
-        context: 'Gerar conteúdo completo e detalhado',
-        rules: 'Seguir padrões do projeto'
+        dependencies: [...deps],
+        context: 'Generate complete and detailed content',
+        rules: 'Follow project patterns'
       };
       console.log(JSON.stringify(instruction, null, 2));
     } else {

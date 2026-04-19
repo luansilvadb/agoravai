@@ -11,10 +11,6 @@ triggers:
   - "propor mudança"
   - "specskill propose"
   - "/specskill:propose"
-scope:
-  primary: ["specskill", "change proposal", "artifact generation", "cli orchestration"]
-  delegates: ["specskill-apply para execução das tasks geradas"]
-quality_bar: high
 ---
 
 # SPECSKILL PROPOSE — Propostas completas e resilientes em um único passo
@@ -63,18 +59,18 @@ quality_bar: high
 ## Protocolo de Execução
 
 1. **Extrair Intenção** — Leia o input do usuário. Se vazio ou ambíguo a ponto de inviabilizar o nome do change, use `AskUserQuestion`. Derive o nome `<name>` em `kebab-case`.
-2. **Scaffoldar com Segurança** — Execute `npm run specskill:new -- "<name>"`. Capture stderr. Se indicar que o change já existe, pergunte ao usuário se deseja sobrescrever/continuar ou criar um novo.
-3. **Mapear Topologia** — Execute `npm run specskill:status -- --change "<name>" --json`. Faça o parse do JSON. Se o parse falhar (JSON inválido), aborte e mostre a saída bruta do comando. Extraia `applyRequires` e a lista `artifacts`.
+2. **Scaffoldar com Segurança** — Execute `npm run specskill:new "<name>"`. Capture stderr. Se indicar que o change já existe, pergunte ao usuário se deseja sobrescrever/continuar ou criar um novo.
+3. **Mapear Topologia** — Execute `npm run specskill:status "<name>" --json`. Faça o parse do JSON. Se o parse falhar (JSON inválido), aborte e mostre a saída bruta do comando. Extraia `applyRequires` e a lista `artifacts`.
 4. **Iniciar Loop de Geração** — Use `TodoWrite` para listar os artefatos pendentes. Ordene a execução respeitando o campo `dependencies` de cada artefato (só processe um se seu status for `ready`).
 5. **Gerar Artefato (Sub-passo crítico):**
-   a. Execute `npm run specskill:instructions -- <artifact-id> --change "<name>" --json`.
+   a. Execute `npm run specskill:instructions "<name>" <artifact-id> --json`.
    b. Faça o parse extraindo `template`, `instruction`, `outputPath` e `dependencies`. Descarte `context` e `rules` da memória de saída.
    c. Leia os arquivos das dependências apontadas no passo anterior.
    d. Escreva o arquivo em `outputPath` usando `template` como esqueleto.
    e. **Validação de I/O**: Tente ler o arquivo recém-escrito. Se falhar, reescreva. Se falhar novamente, aborte o pipeline reportando erro de permissão/I/O.
-6. **Atualizar Estado** — Após geração bem-sucedida, reexecute `npm run specskill:status -- --change "<name>" --json`. Atualize o `TodoWrite`.
+6. **Atualizar Estado** — Após geração bem-sucedida, reexecute `npm run specskill:status "<name>" --json`. Atualize o `TodoWrite`.
 7. **Condição de Parada** — Encerre o loop quando todos os IDs listados em `applyRequires` tiverem `status: "done"` no JSON atual.
-8. **Apresentar Resultado** — Execute `npm run specskill:status -- --change "<name>"` (sem `--json` para saída amigável) e entregue o resumo final.
+8. **Apresentar Resultado** — Execute `npm run specskill:status "<name>"` (sem `--json` para saída amigável) e entregue o resumo final.
 
 ---
 
@@ -131,13 +127,13 @@ echo "$ARTIFACT_CONTENT" > "$OUTPUT_PATH"
 
 ```bash
 # PASS — Verifica antecipadamente e delega a decisão
-if npm run specskill:status -- --change "$NAME" &>/dev/null; then
+if npm run specskill:status "$NAME" --json &>/dev/null; then
   echo "CHANGE_EXISTS"
   # Lógica: trigger AskUserQuestion para o modelo
 fi
 
 # FAIL — Força a criação e sobrescreve
-npm run specskill:new -- "$NAME" --force
+npm run specskill:new "$NAME" --force
 ```
 
 **Por que importa**: Dados de proposta anteriores são difíceis de reconstruir. A decisão de sobrescrever um change em andamento deve ser sempre humana.

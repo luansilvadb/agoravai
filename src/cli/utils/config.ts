@@ -2,7 +2,7 @@ import { join } from 'path';
 
 export const CONFIG = {
   CHANGES_DIR: 'specskill/changes',
-  ARCHIVE_DIR: 'specskill/changes/archive',
+  ARCHIVE_DIR: 'specskill/archive',
   SPECS_DIR: 'specskill/specs',
   DEFAULT_SCHEMA: 'spec-driven',
   SCHEMAS: {

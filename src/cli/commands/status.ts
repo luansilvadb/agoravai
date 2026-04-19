@@ -1,6 +1,11 @@
-import { CONFIG, getChangePath } from '../utils/config.js';
-import { listDirs, pathExists } from '../utils/fs-utils.js';
+import { Container, TOKENS } from '../infrastructure/index.js';
+import type { ChangeRepository, FileSystemPort } from '../domain/repositories.js';
+import { pathExists } from '../utils/fs-utils.js';
+import { getChangePath, CONFIG } from '../utils/config.js';
 import { join } from 'path';
+import { MESSAGES, EXIT_CODES } from '../constants.js';
+import { detectCycleInDeps, findCircularPath } from '../utils/graph.js';
+import { loadSpecsParallel } from '../utils/parallel-io.js';
 
 interface ArtifactStatus {
   name: string;
@@ -21,39 +26,54 @@ export async function statusCommand(options: Record<string, string | boolean>): 
   const jsonOutput = options.json === true;
 
   if (!changeName) {
-    console.error('Erro: --change <name> é obrigatório');
-    process.exit(1);
+    console.error('Error: <name> is required');
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const container = Container.getInstance();
+  const repository = container.resolve<ChangeRepository>(TOKENS.CHANGE_REPOSITORY);
+
+  const change = await repository.getChange(changeName);
+
+  if (!change) {
+    const availableChanges = await repository.list();
+
+    if (jsonOutput) {
+      console.log(JSON.stringify({ error: MESSAGES.ERROR_CHANGE_NOT_FOUND(changeName), available: availableChanges }, null, 2));
+    } else {
+      console.error(`✖ Error: ${MESSAGES.ERROR_CHANGE_NOT_FOUND(changeName)}. Available changes:`);
+      for (const c of availableChanges) {
+        console.error(`  ${c}`);
+      }
+    }
+    process.exit(EXIT_CODES.NOT_FOUND);
   }
 
   const changePath = getChangePath(changeName);
-  
-  if (!pathExists(changePath)) {
-    const availableChanges = await listDirs('specskill/changes');
-    const activeChanges = availableChanges.filter(c => !c.includes('archive'));
-    
-    if (jsonOutput) {
-      console.log(JSON.stringify({ error: `Change '${changeName}' not found`, available: activeChanges }, null, 2));
-    } else {
-      console.error(`✖ Error: Change '${changeName}' not found. Available changes:`);
-      for (const change of activeChanges) {
-        console.error(`  ${change}`);
-      }
-    }
-    process.exit(1);
-  }
 
   const schemaName = CONFIG.DEFAULT_SCHEMA;
   const schema = CONFIG.SCHEMAS[schemaName];
-  
+
+  // Check for circular dependencies in schema
+  const deps: Record<string, string[]> = Object.fromEntries(
+    Object.entries(schema.dependencies).map(([k, v]) => [k, [...v]])
+  );
+  if (detectCycleInDeps(deps)) {
+    const cycle = findCircularPath(deps);
+    console.error(`Error: Circular dependency detected in schema: ${cycle?.join(' -> ')}`);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   const artifacts: ArtifactStatus[] = [];
   let doneCount = 0;
-  
-  // Contar specs granulares
+
+  // Load granular specs using parallel I/O
   const specsDir = join(changePath, 'specs');
   let granularSpecsCount = 0;
   if (pathExists(specsDir)) {
-    const specDirs = await listDirs(specsDir);
-    granularSpecsCount = specDirs.filter(d => d !== 'spec.md' && pathExists(join(specsDir, d, 'spec.md'))).length;
+    const fs = container.resolve<FileSystemPort>(TOKENS.FILE_SYSTEM);
+    const granularSpecs = await loadSpecsParallel(specsDir, fs);
+    granularSpecsCount = granularSpecs.length;
   }
 
   // Helper para obter caminho do artefato
@@ -67,9 +87,9 @@ export async function statusCommand(options: Record<string, string | boolean>): 
     const artifactPath = getArtifactPath(artifactName);
     const exists = pathExists(artifactPath);
     
-    // Verificar dependências
+    // Check dependencies
     const deps = schema.dependencies[artifactName as keyof typeof schema.dependencies] || [];
-    const depsDone = deps.every(dep => {
+    const depsDone = deps.every((dep: string) => {
       const depPath = getArtifactPath(dep);
       return pathExists(depPath);
     });

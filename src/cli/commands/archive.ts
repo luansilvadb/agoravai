@@ -1,33 +1,28 @@
-import { getChangePath, getArchivePath } from '../utils/config.js';
-import { pathExists, listDirs, moveDir } from '../utils/fs-utils.js';
-import { getNextArchiveId } from '../utils/global-config.js';
+import { Container, TOKENS } from '../infrastructure/index.js';
+import type { ChangeRepository, GlobalConfigRepository } from '../domain/repositories.js';
+import { MESSAGES, EXIT_CODES } from '../constants.js';
+import { formatSimplePreview } from '../utils/formatters.js';
 
 export async function archiveCommand(options: Record<string, string | boolean>): Promise<void> {
   const changeName = options.change as string;
   const jsonOutput = options.json === true;
+  const dryRun = options.dryRun === true;
+
+  const container = Container.getInstance();
+  const repository = container.resolve<ChangeRepository>(TOKENS.CHANGE_REPOSITORY);
 
   if (!changeName) {
-    // Listar changes disponíveis
-    if (!pathExists('specskill/changes')) {
-      if (jsonOutput) {
-        console.log(JSON.stringify({ error: 'No changes found' }, null, 2));
-      } else {
-        console.log('No changes found.');
-      }
-      return;
-    }
+    // List available changes
+    const changes = await repository.list();
 
-    const allChanges = await listDirs('specskill/changes');
-    const activeChanges = allChanges.filter(c => c !== 'archive');
-    
     if (jsonOutput) {
-      console.log(JSON.stringify({ changes: activeChanges }, null, 2));
+      console.log(JSON.stringify({ changes }, null, 2));
     } else {
-      if (activeChanges.length === 0) {
-        console.log('No active changes to archive.');
+      if (changes.length === 0) {
+        console.log(MESSAGES.INFO_NO_CHANGES());
       } else {
-        console.log('Active changes (use: npm run specskill:archive -- --change <name>):');
-        for (const change of activeChanges) {
+        console.log('Active changes (use: npm run specskill:archive <name>):');
+        for (const change of changes) {
           console.log(`  - ${change}`);
         }
       }
@@ -35,39 +30,43 @@ export async function archiveCommand(options: Record<string, string | boolean>):
     return;
   }
 
-  const changePath = getChangePath(changeName);
-  
-  if (!pathExists(changePath)) {
+  const change = await repository.getChange(changeName);
+
+  if (!change) {
+    const error = MESSAGES.ERROR_CHANGE_NOT_FOUND(changeName);
     if (jsonOutput) {
-      console.log(JSON.stringify({ error: `Change '${changeName}' not found` }, null, 2));
+      console.log(JSON.stringify({ error }, null, 2));
     } else {
-      console.error(`✖ Error: Change '${changeName}' not found`);
+      console.error(`✖ Error: ${error}`);
     }
-    process.exit(1);
+    process.exit(EXIT_CODES.NOT_FOUND);
   }
 
-  // Gerar próximo ID
-  const archiveId = await getNextArchiveId();
-  const archivePath = getArchivePath(changeName, archiveId);
-  
-  // Verificar se já existe no archive (segurança extra)
-  if (pathExists(archivePath)) {
-    console.error(`✖ Error: Archive already exists at ${archivePath}`);
-    console.error('Options: delete existing archive or rename the change');
-    process.exit(1);
+  const configRepo = container.resolve<GlobalConfigRepository>(TOKENS.GLOBAL_CONFIG_REPOSITORY);
+  const archiveId = await configRepo.getNextArchiveId();
+  const archiveIdStr = String(archiveId).padStart(3, '0');
+
+  if (dryRun) {
+    const preview = formatSimplePreview(
+      'Archive change',
+      changeName,
+      [`Move to: archive/${archiveIdStr}-${changeName}`]
+    );
+    console.log(preview);
+    return;
   }
 
-  // Mover para archive
-  await moveDir(changePath, archivePath);
+  await repository.archive(changeName, archiveIdStr);
 
+  const successMsg = MESSAGES.SUCCESS_CHANGE_ARCHIVED(changeName, archiveIdStr);
   if (jsonOutput) {
-    console.log(JSON.stringify({ 
+    console.log(JSON.stringify({
       success: true,
       change: changeName,
-      archiveId: archiveId,
-      archivedTo: archivePath
+      archiveId: archiveIdStr,
+      message: successMsg
     }, null, 2));
   } else {
-    console.log(`✔ Archived change '${changeName}' to ${archivePath}`);
+    console.log(`✔ ${successMsg}`);
   }
 }

@@ -14,17 +14,6 @@ triggers:
   - "happy path não basta"
   - "caminhos alternativos"
   - "/edge-map"
-scope:
-  primary:
-    - "mapeamento de exceções de negócio"
-    - "catalogação de edge cases"
-    - "resiliência em pipeline de build"
-    - "documentação de caminhos não-felizes"
-  delegates:
-    - "error-handling-patterns para implementação de try/catch e recovery"
-    - "test-strategy para conversão de edge cases em testes automatizados"
-    - "api-design para contratos resilientes em endpoints"
-quality_bar: high
 ---
 
 # EDGE CASE MAPPER — Exceções mapeadas, build blindado
