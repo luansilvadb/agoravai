@@ -1,0 +1,20 @@
+# Dependencies and Build
+node_modules/
+dist/
+build/
+
+# RAG System
+.rag/cache/
+.rag/output/
+
+# Agent and IDE configuration/state
+.agent/
+.windsurf/
+
+# Git history
+.git/
+
+# Logs and temporary files
+*.log
+.DS_Store
+Thumbs.db
