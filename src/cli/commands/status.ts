@@ -79,7 +79,7 @@ export async function statusCommand(options: Record<string, string | boolean>): 
   // Helper para obter caminho do artefato
   const getArtifactPath = (name: string): string => {
     return name === 'specs' 
-      ? join(changePath, 'specs', 'spec.md')
+      ? join(changePath, 'specs', 'specs.md')
       : join(changePath, `${name}.md`);
   };
 
@@ -151,7 +151,7 @@ export async function statusCommand(options: Record<string, string | boolean>): 
     
     if (granularSpecsCount > 0) {
       console.log('');
-      console.log(`Use --specs flag or run specskill:generate to manage ${granularSpecsCount} granular specs`);
+      console.log(`Use --specs flag or run specskills:generate to manage ${granularSpecsCount} granular specs`);
     }
   }
 }

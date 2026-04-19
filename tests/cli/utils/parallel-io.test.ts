@@ -48,9 +48,9 @@ describe('Parallel I/O', () => {
       expect(specs).toHaveLength(0);
     });
 
-    it('should skip spec.md directory', async () => {
+    it('should skip specs.md directory', async () => {
       const mockFs = createMockFs({
-        listDirs: vi.fn().mockResolvedValue(['spec.md', 'spec-a']),
+        listDirs: vi.fn().mockResolvedValue(['specs.md', 'spec-a']),
         pathExists: vi.fn().mockResolvedValue(true),
         readFile: vi.fn().mockResolvedValue('# Title'),
       });

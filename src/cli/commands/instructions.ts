@@ -60,7 +60,7 @@ export async function instructionsCommand(options: Record<string, string | boole
   if (artifactId === 'apply') {
     const tasksPath = join(changePath, 'tasks.md');
     const designPath = join(changePath, 'design.md');
-    const specsPath = join(changePath, 'specs', 'spec.md');
+    const specsPath = join(changePath, 'specs', 'specs.md');
     const proposalPath = join(changePath, 'proposal.md');
 
     const contextFiles: string[] = [];

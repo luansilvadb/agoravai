@@ -48,11 +48,11 @@ export async function applyCommand(options: Record<string, string | boolean>): P
       console.log(JSON.stringify({
         error: 'Tasks file not found',
         state: 'blocked',
-        message: 'Use specskill:continue to generate tasks'
+        message: 'Use specskills:continue to generate tasks'
       }, null, 2));
     } else {
       console.error('✖ Error: tasks.md not found');
-      console.error('Use: npm run specskill:continue ' + changeName);
+      console.error('Use: npm run specskills:continue ' + changeName);
     }
     process.exit(EXIT_CODES.NOT_FOUND);
   }
@@ -148,8 +148,8 @@ export async function applyCommand(options: Record<string, string | boolean>): P
       }
       console.log('');
       console.log('Usage:');
-      console.log(`  Apply all:          npm run specskill:apply ${changeName}`);
-      console.log(`  Apply specific:     npm run specskill:apply ${changeName} --spec <spec-id>`);
+      console.log(`  Apply all:          npm run specskills:apply ${changeName}`);
+      console.log(`  Apply specific:     npm run specskills:apply ${changeName} --spec <spec-id>`);
     }
   }
 }

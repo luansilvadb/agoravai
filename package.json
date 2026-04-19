@@ -1,9 +1,9 @@
 {
-  "name": "@mondrakebr1/rag-skills",
-  "version": "1.0.10",
+  "name": "@mondrakebr1/specskills",
+  "version": "1.0.20",
   "bin": {
-    "rag-skills": "./dist/index.js",
-    "specskill": "./dist/cli/index.js"
+    "ragskills": "./dist/index.js",
+    "specskills": "./dist/cli/index.js"
   },
   "description": "RAG-powered skills retrieval system",
   "main": "dist/index.js",
@@ -11,7 +11,7 @@
     "dist/",
     "README.md",
     ".rag/",
-    "specskill/",
+    "specskills/",
     ".windsurf/workflows/",
     "scripts/"
   ],
@@ -28,15 +28,15 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
     "prepublishOnly": "npm run build",
     "postinstall": "tsx scripts/postinstall/index.ts",
-    "specskill:new": "tsx src/cli/index.ts new change",
-    "specskill:status": "tsx src/cli/index.ts status",
-    "specskill:list": "tsx src/cli/index.ts list",
-    "specskill:instructions": "tsx src/cli/index.ts instructions",
-    "specskill:apply": "tsx src/cli/index.ts apply",
-    "specskill:continue": "tsx src/cli/index.ts continue",
-    "specskill:archive": "tsx src/cli/index.ts archive",
-    "specskill:exists": "tsx src/cli/index.ts exists",
-    "specskill:generate": "tsx src/cli/index.ts generate",
+    "specskills:new": "tsx src/cli/index.ts new change",
+    "specskills:status": "tsx src/cli/index.ts status",
+    "specskills:list": "tsx src/cli/index.ts list",
+    "specskills:instructions": "tsx src/cli/index.ts instructions",
+    "specskills:apply": "tsx src/cli/index.ts apply",
+    "specskills:continue": "tsx src/cli/index.ts continue",
+    "specskills:archive": "tsx src/cli/index.ts archive",
+    "specskills:exists": "tsx src/cli/index.ts exists",
+    "specskills:generate": "tsx src/cli/index.ts generate",
     "build:cli": "tsc -p tsconfig.cli.json || tsc src/cli/index.ts --outDir dist/cli --module esnext --moduleResolution node --esModuleInterop true --target es2022"
   },
   "repository": {

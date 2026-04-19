@@ -91,7 +91,7 @@ async function analyzeChangeContext(changePath: string): Promise<DetectedSpec[]>
   ];
 
   for (const pattern of patterns) {
-    const specPath = join(specsDir, pattern.id, 'spec.md');
+    const specPath = join(specsDir, pattern.id, 'specs.md');
     
     // Only suggest if doesn't exist and keywords are detected
     if (!pathExists(specPath) && pattern.keywords.some(k => fullContext.includes(k))) {
@@ -117,7 +117,7 @@ async function analyzeChangeContext(changePath: string): Promise<DetectedSpec[]>
         const words = task.replace(/- \[ \] /, '').replace(/- \[x\] /, '').split(' ').slice(0, 4);
         const specId = words.map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '-')).join('-').replace(/-+/g, '-').replace(/^-|-$/g, '');
         
-        if (specId && !pathExists(join(specsDir, specId, 'spec.md'))) {
+        if (specId && !pathExists(join(specsDir, specId, 'specs.md'))) {
           const alreadyAdded = detected.find(d => d.id === specId);
           if (!alreadyAdded) {
             detected.push({
@@ -137,7 +137,7 @@ async function analyzeChangeContext(changePath: string): Promise<DetectedSpec[]>
 
 async function generateSpec(changePath: string, detected: DetectedSpec, changeName: string): Promise<void> {
   const specDir = join(changePath, 'specs', detected.id);
-  const specPath = join(specDir, 'spec.md');
+  const specPath = join(specDir, 'specs.md');
 
   await ensureDir(specDir);
 
@@ -232,7 +232,7 @@ export async function generateCommand(options: Record<string, string | boolean>)
       console.log(`✔ Generated ${generated.length} specs dynamically for '${changeName}':`);
       for (const id of generated) {
         const spec = specsNeeded.find(s => s.id === id);
-        console.log(`  - specs/${id}/spec.md (${spec?.name})`);
+        console.log(`  - specs/${id}/specs.md (${spec?.name})`);
         if (spec) {
           console.log(`    Context: ${spec.context}`);
         }
@@ -240,7 +240,7 @@ export async function generateCommand(options: Record<string, string | boolean>)
     } else {
       console.log(`Detected specs needed for '${changeName}' (based on context analysis):`);
       for (const spec of specsNeeded) {
-        console.log(`  - specs/${spec.id}/spec.md`);
+        console.log(`  - specs/${spec.id}/specs.md`);
         console.log(`    Name: ${spec.name}`);
         console.log(`    Context: ${spec.context}`);
         console.log(`    Suggested Sections: ${spec.suggestedSections.join(', ')}`);

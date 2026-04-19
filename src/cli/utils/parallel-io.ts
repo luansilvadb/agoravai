@@ -26,9 +26,9 @@ export async function loadSpecsParallel(
   const dirs = await fs.listDirs(specsDir);
 
   const specs = await batchProcess(
-    dirs.filter(dir => dir !== 'spec.md'),
+    dirs.filter(dir => dir !== 'specs.md'),
     async (dir) => {
-      const specPath = join(specsDir, dir, 'spec.md');
+      const specPath = join(specsDir, dir, 'specs.md');
       if (!(await fs.pathExists(specPath))) return null;
 
       const content = await fs.readFile(specPath);
@@ -57,7 +57,9 @@ export async function loadArtifactsParallel(
   const artifacts = await batchProcess(
     artifactIds,
     async (id) => {
-      const artifactPath = join(changePath, id, 'spec.md');
+      const artifactPath = id === 'specs' 
+        ? join(changePath, 'specs', 'specs.md')
+        : join(changePath, `${id}.md`);
       if (!(await fs.pathExists(artifactPath))) return null;
 
       const content = await fs.readFile(artifactPath);

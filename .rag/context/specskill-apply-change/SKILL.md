@@ -1,8 +1,8 @@
 ---
-name: specskill-apply-change
+name: specskills-apply-change
 version: 1.0.0
 description: >
-  Implementa tarefas de uma mudança SpecSkill — da seleção até a
+  Implementa tarefas de uma mudança SpecSkills — da seleção até a
   validação do build. Ative ao iniciar, continuar ou retomar
   implementação de uma change.
 triggers:
@@ -10,14 +10,14 @@ triggers:
   - "aplicar change"
   - "continuar implementação"
   - "começar tasks"
-  - "/specskill:apply"
-  - "specskill apply"
+  - "/specskills:apply"
+  - "specskills apply"
   - "retomar change"
 ---
 
-# SPECSKILL APPLY CHANGE — Da tarefa ao build validado
+# SPECSKILLS APPLY CHANGE — Da tarefa ao build validado
 
-> **Propósito**: Executar tarefas de uma change SpecSkill com resiliência
+> **Propósito**: Executar tarefas de uma change SpecSkills com resiliência
 > completa — cada etapa tem tratamento de falha explícito, rollback
 > automático e verificação de build antes de marcar conclusão.
 
@@ -43,9 +43,9 @@ triggers:
 - Verificar progresso e prosseguir com tarefas restantes
 
 ### ❌ NÃO ativar para:
-- Gerar artefatos ausentes (proposal, specs, design, tasks) → use `specskill-continue-change`
-- Criar uma nova change do zero → use `specskill-create-change`
-- Arquivar change completa → use `specskill-archive-change`
+- Gerar artefatos ausentes (proposal, specs, design, tasks) → use `specskills-continue-change`
+- Criar uma nova change do zero → use `specskills-create-change`
+- Arquivar change completa → use `specskills-archive-change`
 - Discutir design ou arquitetura sem implementar → responda diretamente
 
 ## Escopo e Limites
@@ -56,14 +56,14 @@ triggers:
 | Leitura e parse de saída CLI (`--json`) | — |
 | Implementação de tarefas em código | — |
 | Verificação de build pós-implementação | — |
-| Detecção de problemas de design durante implementação | `specskill-continue-change` |
-| Geração de artefatos ausentes | `specskill-continue-change` |
-| Arquivamento pós-conclusão | `specskill-archive-change` |
+| Detecção de problemas de design durante implementação | `specskills-continue-change` |
+| Geração de artefatos ausentes | `specskills-continue-change` |
+| Arquivamento pós-conclusão | `specskills-archive-change` |
 
 ### Inputs Aceitos
 - Nome da change (string, opcional — inferido ou selecionado)
 - Contexto conversacional (para inferir change ausente)
-- Saída JSON dos comandos `npm run specskill:status` e `npm run specskill:instructions`
+- Saída JSON dos comandos `npm run specskills:status` e `npm run specskills:instructions`
 
 ### Outputs Esperados
 - Código implementado nos arquivos alvo das tarefas
@@ -88,24 +88,24 @@ triggers:
 1. **Identificar** a change:
    - Nome fornecido explicitamente → use-o diretamente
    - Nome ausente, contexto conversacional claro → infira
-   - Nome ausente, sem contexto → execute `npm run specskill:list -- --json`
+   - Nome ausente, sem contexto → execute `npm run specskills:list -- --json`
 
    **Exceções**:
-   - `npm run specskill:list` falha (exit != 0) → reporte erro do CLI, não prossiga
-   - `npm run specskill:list` retorna JSON vazio ou `[]` → informe que não há changes ativas
-   - `npm run specskill:list` retorna múltiplas changes → use **AskUserQuestion** para seleção
+   - `npm run specskills:list` falha (exit != 0) → reporte erro do CLI, não prossiga
+   - `npm run specskills:list` retorna JSON vazio ou `[]` → informe que não há changes ativas
+   - `npm run specskills:list` retorna múltiplas changes → use **AskUserQuestion** para seleção
    - Nome fornecido mas não aparece no `list` → informe com lista de disponíveis
 
 2. **Anunciar** a seleção:
    ```
-   Usando change: <name> (para trocar: /specskill:apply <outro-nome>)
+   Usando change: <name> (para trocar: /specskills:apply <outro-nome>)
    ```
 
 ### Fase 2 — Inspeção do Estado
 
 3. **Obter status**:
    ```bash
-   npm run specskill:status "<name>" --json
+   npm run specskills:status "<name>" --json
    ```
 
    **Parse obrigatório** — extraia:
@@ -121,7 +121,7 @@ triggers:
 
 4. **Obter instruções de apply**:
    ```bash
-   npm run specskill:instructions "<name>" apply --json
+   npm run specskills:instructions "<name>" apply --json
    ```
 
    **Parse obrigatório** — extraia:
@@ -132,8 +132,8 @@ triggers:
    - `dynamicInstruction` (instrução contextual do CLI)
 
    **Exceções por estado**:
-   - `state: "blocked"` → mostre mensagem do CLI, sugira `npm run specskill:continue`, **PARE**
-   - `state: "all_done"` → parabenize, sugira `npm run specskill:archive`, **PARE**
+   - `state: "blocked"` → mostre mensagem do CLI, sugira `npm run specskills:continue`, **PARE**
+   - `state: "all_done"` → parabenize, sugira `npm run specskills:archive`, **PARE**
    - `state` ausente mas tasks pendentes existem → prossiga (fallback seguro)
    - JSON sem campo `tasks` → reporte erro estrutural, **PARE**
    - `progress.remaining: 0` mas estado != "all_done" → trate como all_done
@@ -295,7 +295,7 @@ triggers:
 
 ```bash
 # ✅ PASS — valida exit code E integridade do JSON
-OUTPUT=$(npm run specskill:status "feat-login" --json 2>&1)
+OUTPUT=$(npm run specskills:status "feat-login" --json 2>&1)
 if [ $? -ne 0 ]; then
   echo "ERRO: CLI falhou com exit code $?"
   echo "$OUTPUT"
@@ -308,7 +308,7 @@ echo "$OUTPUT" | jq -e '.schemaName' > /dev/null 2>&1 || {
 }
 
 # ❌ FAIL — pipe direto sem validação
-SCHEMA=$(npm run specskill:status "feat-login" --json | jq '.schemaName')
+SCHEMA=$(npm run specskills:status "feat-login" --json | jq '.schemaName')
 # Se CLI falhar, $SCHEMA conterá mensagem de erro como string
 # Se JSON for malformado, jq falha silenciosamente e $SCHEMA fica vazia
 ```
@@ -377,14 +377,14 @@ done
 ```
 # ✅ PASS — decisão diferenciada baseada em criticidade do arquivo
 ERRO CRÍTICO: Tasks file ausente
-  Esperado: .specskill/changes/feat-login/tasks.md
+  Esperado: .specskills/changes/feat-login/tasks.md
   Ação: não é possível implementar sem lista de tarefas
-  → Use npm run specskill:continue para gerar tasks
+  → Use npm run specskills:continue para gerar tasks
 
 ---
 
 AVISO: ContextFile secundário ausente
-  Ausente: .specskill/changes/feat-login/design.md
+  Ausente: .specskills/changes/feat-login/design.md
   Tasks file encontrado: ✓ (3 tarefas pendentes)
   Ação: prosseguindo sem design.md — implementação pode estar
         incompleta sem contexto de design. Confirme se deseja continuar.
@@ -396,7 +396,7 @@ ERRO: Arquivo ausente: design.md
 Implementação cancelada.
 ```
 
-**Por que importa**: O SpecSkill suporta workflow fluido onde tarefas podem existir antes de todos os artefatos. Bloquear por arquivo secundário quebra esse modelo.
+**Por que importa**: O SpecSkills suporta workflow fluido onde tarefas podem existir antes de todos os artefatos. Bloquear por arquivo secundário quebra esse modelo.
 
 ---
 
@@ -414,8 +414,8 @@ Implementação cancelada.
   - tasks.md tarefa 4: "tornar user_id nullable"
 
 **Opções:**
-1. Atualizar specs.md para refletir nullable → use npm run specskill:continue
-2. Atualizar tasks.md para remover nullable → use npm run specskill:continue
+1. Atualizar specs.md para refletir nullable → use npm run specskills:continue
+2. Atualizar tasks.md para remover nullable → use npm run specskills:continue
 3. Esclarecer com você antes de mudar artefatos
 
 # ❌ FAIL — decide sozinho e implementa uma interpretação
@@ -459,7 +459,7 @@ npm ERR! Could not find a package.json
 | Pular tarefa "difícil" e ir para a próxima | Dependências quebram, ordenação inconsistente | Resolver na ordem ou pausar reportando o bloqueio |
 | Assumir schema "spec-driven" sem verificar | Lê arquivo errado, implementa spec equivocada | Sempre ler `schemaName` do `status --json` |
 | Criar arquivo não mencionado na tarefa sem perguntar | Arquivos órfãos, surpresa para o time | Pausar e confirmar antes de criar |
-| Tratar todo `contextFile` ausente como bloqueante | Quebra workflow fluido do SpecSkill | Diferenciar tasks (crítico) de outros (secundários) |
+| Tratar todo `contextFile` ausente como bloqueante | Quebra workflow fluido do SpecSkills | Diferenciar tasks (crítico) de outros (secundários) |
 | Tentar resolver erro de dependência de pacote | Mudanças fora de escopo, efeitos colaterais | Reporte e deixe o usuário resolver |
 | Reescrever arquivo de tasks inteiro ao marcar checkbox | Perde formatação, ordem, metadados | Edição cirúrgica de uma linha por tarefa |
 
@@ -468,8 +468,8 @@ npm ERR! Could not find a package.json
 Antes de declarar "Implementação Completa", confirme:
 
 - [ ] Change selecionada sem ambiguidade (ou ambiguidade resolvida com usuário)
-- [ ] `npm run specskill:status "$NAME" --json` parseado sem erro, `schemaName` identificado
-- [ ] `npm run specskill:instructions -- apply --json` parseado sem erro, estado verificado
+- [ ] `npm run specskills:status "$NAME" --json` parseado sem erro, `schemaName` identificado
+- [ ] `npm run specskills:instructions -- apply --json` parseado sem erro, estado verificado
 - [ ] Tasks file lido com sucesso (arquivo existe e contém tarefas)
 - [ ] Outros `contextFiles` lidos ou ausência registrada com aviso
 - [ ] Cada tarefa implementada com mudança mínima e cirúrgica
@@ -485,10 +485,10 @@ Antes de declarar "Implementação Completa", confirme:
 
 | Precisa de... | Use a skill... |
 |---|---|
-| Gerar artefatos ausentes (proposal, specs, design, tasks) | `npm run specskill:continue` |
-| Criar uma nova change do zero | `npm run specskill:new "$NAME" --force` |
-| Arquivar change completa | `npm run specskill:archive` |
-| Listar e inspecionar changes existentes | CLI direto: `npm run specskill:list -- --json` |
+| Gerar artefatos ausentes (proposal, specs, design, tasks) | `npm run specskills:continue` |
+| Criar uma nova change do zero | `npm run specskills:new "$NAME" --force` |
+| Arquivar change completa | `npm run specskills:archive` |
+| Listar e inspecionar changes existentes | CLI direto: `npm run specskills:list -- --json` |
 | Padrões de código para a implementação | Skill específica do stack (`frontend-design`, `backend-patterns`, etc.) |
 
 ## Exemplo Completo — Fluxo Feliz
@@ -536,10 +536,10 @@ Todas as tarefas completas! Pronta para arquivar.
 
 ## Exemplo — Fluxo com Bloqueio em Build
 
-**Input**: `/specskill:apply feat-payment`
+**Input**: `/specskills:apply feat-payment`
 
 ```
-Usando change: feat-payment (para trocar: /specskill:apply <outro-nome>)
+Usando change: feat-payment (para trocar: /specskills:apply <outro-nome>)
 
 ## Implementando: feat-payment (schema: spec-driven)
 Progresso: 0/3 tarefas concluídas
@@ -593,7 +593,7 @@ Todas as tarefas completas! Pronta para arquivar.
 **Input**: `continuar implementação de feat-notification`
 
 ```
-Usando change: feat-notification (para trocar: /specskill:apply <outro-nome>)
+Usando change: feat-notification (para trocar: /specskills:apply <outro-nome>)
 
 ## Implementando: feat-notification (schema: spec-driven)
 Progresso: 2/5 tarefas concluídas
@@ -615,8 +615,8 @@ Contradição entre artefatos na tarefa 3:
   Não é possível determinar qual tecnologia usar sem atualizar um dos artefatos.
 
 ### Opções
-1. Atualizar specs.md para RabbitMQ → use npm run specskill:continue feat-notification
-2. Atualizar tasks.md para Redis Streams → use npm run specskill:continue feat-notification
+1. Atualizar specs.md para RabbitMQ → use npm run specskills:continue feat-notification
+2. Atualizar tasks.md para Redis Streams → use npm run specskills:continue feat-notification
 3. Você me diz qual tecnologia usar e eu atualizo o artefato correto
 
 O que deseja fazer?

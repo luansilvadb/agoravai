@@ -6,7 +6,7 @@ import { formatPreview, type PreviewItem } from '../utils/formatters.js';
 export async function newChangeCommand(name: string, options: Record<string, string | boolean> = {}): Promise<void> {
   if (!name) {
     console.error(MESSAGES.ERROR_INVALID_NAME());
-    console.error('Usage: specskill new change <name> [--schema <schema>]');
+    console.error('Usage: specskills new change <name> [--schema <schema>]');
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -31,11 +31,11 @@ export async function newChangeCommand(name: string, options: Record<string, str
 
   if (dryRun) {
     const items: PreviewItem[] = [
-      { action: 'create', path: `specskill/changes/${name}/.specskill.yaml`, description: 'config' },
-      { action: 'create', path: `specskill/changes/${name}/proposal.md`, description: 'artifact' },
-      { action: 'create', path: `specskill/changes/${name}/design.md`, description: 'artifact' },
-      { action: 'create', path: `specskill/changes/${name}/specs/spec.md`, description: 'artifact' },
-      { action: 'create', path: `specskill/changes/${name}/tasks.md`, description: 'artifact' },
+      { action: 'create', path: `specskills/changes/${name}/.specskills.yaml`, description: 'config' },
+      { action: 'create', path: `specskills/changes/${name}/proposal.md`, description: 'artifact' },
+      { action: 'create', path: `specskills/changes/${name}/design.md`, description: 'artifact' },
+      { action: 'create', path: `specskills/changes/${name}/specs/specs.md`, description: 'artifact' },
+      { action: 'create', path: `specskills/changes/${name}/tasks.md`, description: 'artifact' },
     ];
     console.log(formatPreview({
       title: `Create change '${name}' (${schemaName})`,
@@ -49,7 +49,7 @@ export async function newChangeCommand(name: string, options: Record<string, str
     name,
     schema: schemaName as 'spec-driven' | 'minimal',
     created: new Date().toISOString(),
-    path: `specskill/changes/${name}`,
+    path: `specskills/changes/${name}`,
     artifacts: ['proposal', 'design', 'specs', 'tasks'],
   };
 

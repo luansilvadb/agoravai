@@ -1,10 +1,10 @@
 export const PATHS = {
-  CHANGES_DIR: 'specskill/changes',
-  ARCHIVE_DIR: 'specskill/archive',
-  SPECS_DIR: 'specskill/specs',
-  GLOBAL_CONFIG: 'specskill/.specskill.global.yaml',
-  CHANGE_CONFIG: '.specskill.yaml',
-  SPEC_FILENAME: 'spec.md',
+  CHANGES_DIR: 'specskills/changes',
+  ARCHIVE_DIR: 'specskills/archive',
+  SPECS_DIR: 'specskills/specs',
+  GLOBAL_CONFIG: 'specskills/.specskills.global.yaml',
+  CHANGE_CONFIG: '.specskills.yaml',
+  SPEC_FILENAME: 'specs.md',
   TASKS_FILENAME: 'tasks.md',
 } as const;
 

@@ -93,7 +93,7 @@ artifacts:
           name: 'my-change',
           schema: 'spec-driven',
           created: '2024-01-15T10:30:00Z',
-          path: 'specskill/changes/my-change',
+          path: 'specskills/changes/my-change',
           artifacts: ['proposal'],
         };
 
@@ -112,7 +112,7 @@ artifacts:
           name: '',
           schema: 'invalid-schema',
           created: 'invalid-date',
-          path: 'specskill/changes/test',
+          path: 'specskills/changes/test',
         };
 
         await expect(repo.save(invalidChange as Change)).rejects.toThrow();
@@ -268,7 +268,7 @@ created: 2024-01-15T10:30:00Z
         name: 'test',
         schema: 'spec-driven',
         created: '2024-01-15T10:30:00Z',
-        path: 'specskill/changes/test',
+        path: 'specskills/changes/test',
       };
 
       await repo.save(change);
@@ -283,13 +283,13 @@ created: 2024-01-15T10:30:00Z
         name: 'a',
         schema: 'spec-driven',
         created: '2024-01-15T10:30:00Z',
-        path: 'specskill/changes/a',
+        path: 'specskills/changes/a',
       });
       await repo.save({
         name: 'b',
         schema: 'spec-driven',
         created: '2024-01-15T10:30:00Z',
-        path: 'specskill/changes/b',
+        path: 'specskills/changes/b',
       });
 
       const list = await repo.list();
@@ -304,7 +304,7 @@ created: 2024-01-15T10:30:00Z
         name: 'test',
         schema: 'spec-driven',
         created: '2024-01-15T10:30:00Z',
-        path: 'specskill/changes/test',
+        path: 'specskills/changes/test',
       });
 
       await repo.archive('test', '001');

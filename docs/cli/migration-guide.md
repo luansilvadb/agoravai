@@ -10,7 +10,7 @@ This guide helps contributors understand the new CLI architecture and how to mig
 import { existsSync, readFileSync } from 'fs';
 
 export function oldCommand(name: string): void {
-  const path = `specskill/changes/${name}/.specskill.yaml`;
+  const path = `specskills/changes/${name}/.specskills.yaml`;
   if (existsSync(path)) {
     const content = readFileSync(path, 'utf-8');
     // ...

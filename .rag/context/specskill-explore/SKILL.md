@@ -566,9 +566,9 @@ A skill foi estruturada como pipeline de 7 etapas porque esse é o mínimo para 
 If the user mentions a change or you detect one is relevant:
 
 1. **Read existing artifacts for context**
-   - `specskill/changes/<name>/proposal.md`
-   - `specskill/changes/<name>/design.md`
-   - `specskill/changes/<name>/tasks.md`
+   - `specskills/changes/<name>/proposal.md`
+   - `specskills/changes/<name>/design.md`
+   - `specskills/changes/<name>/tasks.md`
    - etc.
 
 2. **Reference them naturally in conversation**

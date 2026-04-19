@@ -8,7 +8,7 @@ const configSchema = z.object({
   logLevel: logLevelSchema.default(LogLevel.INFO),
   projectRoot: z.string().default(process.cwd()),
   windsurfDir: z.string().default('.windsurf'),
-  specskillDir: z.string().default('specskill'),
+  specskillsDir: z.string().default('specskills'),
   ragDir: z.string().default('.rag'),
 });
 

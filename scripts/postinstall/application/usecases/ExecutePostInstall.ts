@@ -35,9 +35,9 @@ export class ExecutePostInstall {
         label: 'Windsurf Workflows',
       },
       {
-        source: path.join(packageRoot, 'specskill', 'changes'),
-        target: path.join(userProjectRoot, 'specskill', 'changes'),
-        label: 'SpecSkill Changes',
+        source: path.join(packageRoot, 'specskills', 'changes'),
+        target: path.join(userProjectRoot, 'specskills', 'changes'),
+        label: 'SpecSkills Changes',
       },
       {
         source: path.join(packageRoot, '.rag', 'context'),

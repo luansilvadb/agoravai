@@ -81,7 +81,7 @@ tests/
 - **Infrastructure** implementa interfaces do Domain
 - **Injeção de Dependências**: Todas as dependências passadas via construtor
 
-## 🖥️ CLI Architecture (Specskill)
+## 🖥️ CLI Architecture (Specskills)
 
 Spec-driven change management CLI with layered architecture:
 
@@ -105,22 +105,22 @@ Spec-driven change management CLI with layered architecture:
 
 ```bash
 # Create a new change
-npm run specskill:new my-change
+npm run specskills:new my-change
 
 # Check status
-npm run specskill:status -- --change my-change
+npm run specskills:status -- --change my-change
 
 # Apply pending tasks
-npm run specskill:apply -- --change my-change
+npm run specskills:apply -- --change my-change
 
 # Archive completed change
-npm run specskill:archive -- --change my-change
+npm run specskills:archive -- --change my-change
 
 # List all changes
-npm run specskill:list
+npm run specskills:list
 
 # All commands support --dry-run for preview
-npm run specskill:archive -- --change my-change --dry-run
+npm run specskills:archive -- --change my-change --dry-run
 ```
 
 ### Key Components

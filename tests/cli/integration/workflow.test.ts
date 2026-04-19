@@ -55,7 +55,7 @@ describe('Integration: Full Workflow', () => {
         name: 'archive-test',
         schema: 'spec-driven',
         created: new Date().toISOString(),
-        path: 'specskill/changes/archive-test',
+        path: 'specskills/changes/archive-test',
       });
 
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -104,7 +104,7 @@ describe('Integration: Full Workflow', () => {
         name: 'archive-dry-run',
         schema: 'spec-driven',
         created: new Date().toISOString(),
-        path: 'specskill/changes/archive-dry-run',
+        path: 'specskills/changes/archive-dry-run',
       });
 
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -156,13 +156,13 @@ describe('Integration: Full Workflow', () => {
         name: 'change-a',
         schema: 'spec-driven',
         created: new Date().toISOString(),
-        path: 'specskill/changes/change-a',
+        path: 'specskills/changes/change-a',
       });
       await repo.save({
         name: 'change-b',
         schema: 'spec-driven',
         created: new Date().toISOString(),
-        path: 'specskill/changes/change-b',
+        path: 'specskills/changes/change-b',
       });
 
       const list = await repo.list();
@@ -179,13 +179,13 @@ describe('Integration: Full Workflow', () => {
         name: 'keep-me',
         schema: 'spec-driven',
         created: new Date().toISOString(),
-        path: 'specskill/changes/keep-me',
+        path: 'specskills/changes/keep-me',
       });
       await repo.save({
         name: 'archive-me',
         schema: 'spec-driven',
         created: new Date().toISOString(),
-        path: 'specskill/changes/archive-me',
+        path: 'specskills/changes/archive-me',
       });
 
       await repo.archive('archive-me', '001');

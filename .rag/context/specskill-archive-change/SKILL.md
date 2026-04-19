@@ -1,8 +1,8 @@
 ---
-name: specskill-archive-change
+name: specskills-archive-change
 version: 1.0.0
 description: >
-  Arquiva uma change concluída no workflow experimental do specskill.
+  Arquiva uma change concluída no workflow experimental do specskills.
   Valida conclusão de artefatos e tarefas, avalia sincronização de delta specs,
   e move o diretório para archive com nome datado. Ative ao finalizar uma change.
 triggers:
@@ -13,7 +13,7 @@ triggers:
   - "/archive-change"
 ---
 
-# SPECSKILL ARCHIVE CHANGE — Arquivamento seguro de changes concluídas
+# SPECSKILLS ARCHIVE CHANGE — Arquivamento seguro de changes concluídas
 
 > **Propósito**: Executar o arquivamento de uma change com validação completa
 > de pré-requisitos, avaliação de delta specs, e movimentação segura para archive —
@@ -24,13 +24,13 @@ triggers:
 ## Filosofia Central
 
 1. **Nunca auto-selecionar** — O usuário escolhe a change. Inferência contextual é aceita; seleção automática não.
-   Na prática: se o nome não for explícito ou unívoco, sempre execute `npm run specskill:list -- --json` e apresente seleção.
+   Na prática: se o nome não for explícito ou unívoco, sempre execute `npm run specskills:list -- --json` e apresente seleção.
 
 2. **Avisar não é bloquear** — Incomplete artifacts e tarefas geram warnings + confirmação, nunca falha.
    Na prática: use `AskUserQuestion` com opção explícita de prosseguir mesmo com itens pendentes.
 
 3. **Preservar estado original** — Arquivamento move, não copia. O diretório deve permanecer intacto no destino.
-   Na prática: use `mv` atômico, nunca `cp + rm`, e valide que `.specskill.yaml` acompanhou.
+   Na prática: use `mv` atômico, nunca `cp + rm`, e valide que `.specskills.yaml` acompanhou.
 
 4. **Sincronizar é opcional mas visível** — Delta specs existentes exigem avaliação e prompt, mas o usuário pode pular.
    Na prática: sempre mostre o diff resumido antes de perguntar; nunca sincronize silenciosamente.
@@ -48,10 +48,10 @@ triggers:
 - Fluxo de workflow indica que uma change está pronta para archive
 
 ### ❌ NÃO ativar para:
-- Criar nova change → use `specskill-create-change`
-- Sincronizar specs sem arquivar → use `specskill-sync-specs`
-- Listar changes sem intenção de arquivar → responda diretamente com `npm run specskill:list -- --json`
-- Reverter arquivamento → responda diretamente com `mv specskill/archive/<name> specskill/changes/<name>`
+- Criar nova change → use `specskills-create-change`
+- Sincronizar specs sem arquivar → use `specskills-sync-specs`
+- Listar changes sem intenção de arquivar → responda diretamente com `npm run specskills:list -- --json`
+- Reverter arquivamento → responda diretamente com `mv specskills/archive/<name> specskills/changes/<name>`
 
 ---
 
@@ -59,10 +59,10 @@ triggers:
 
 | Esta skill cobre | Esta skill delega |
 |---|---|
-| Seleção de change via prompt | Sincronização de delta specs → `specskill-sync-specs` |
-| Validação de artefatos via CLI | Criação de nova change → `specskill-create-change` |
+| Seleção de change via prompt | Sincronização de delta specs → `specskills-sync-specs` |
+| Validação de artefatos via CLI | Criação de nova change → `specskills-create-change` |
 | Validação de tarefas via filesystem | Modificação de specs manuais → edição direta |
-| Avaliação de delta specs (leitura) | Resolução de conflitos de sync → `specskill-sync-specs` |
+| Avaliação de delta specs (leitura) | Resolução de conflitos de sync → `specskills-sync-specs` |
 | Movimentação para archive | |
 
 ---
@@ -75,7 +75,7 @@ triggers:
 
 ```
 1.1. Usar o nome fornecido diretamente.
-1.2. Validar que o diretório specskill/changes/<name> existe.
+1.2. Validar que o diretório specskills/changes/<name> existe.
      → Se não existe: falhar com erro listando changes disponíveis (ver 1.3).
 1.3. Prosseguir para PASSO 2.
 ```
@@ -83,12 +83,12 @@ triggers:
 **Condição de entrada**: Nome não fornecido.
 
 ```
-1.1. Executar: npm run specskill:list -- --json
+1.1. Executar: npm run specskills:list -- --json
 1.2. [RESILIÊNCIA] Se o comando falhar:
      - Erro de CLI não encontrado: falhar com "CLI não está instalado ou não está no PATH"
      - JSON inválido: falhar com "Output de change:list não é JSON válido. Stderr: <stderr>"
      - Exit code != 0: falhar com "change:list retornou erro (exit <code>): <stderr>"
-1.3. Filtrar a lista para changes ativas (excluir as que estão em specskill/archive/).
+1.3. Filtrar a lista para changes ativas (excluir as que estão em specskills/archive/).
 1.4. [CASO DE EXCEÇÃO] Se nenhuma change ativa encontrada:
      - Informar "Nenhuma change ativa para arquivar."
      - Parar execução aqui.
@@ -109,7 +109,7 @@ triggers:
 ### PASSO 2 — Verificar status de artefatos
 
 ```
-2.1. Executar: npm run specskill:status -- --change "<CHANGE_NAME>" --json
+2.1. Executar: npm run specskills:status -- --change "<CHANGE_NAME>" --json
 2.2. [RESILIÊNCIA] Se o comando falhar:
      - Change não encontrada: falhar com "Change '<CHANGE_NAME>' não encontrada"
      - JSON inválido: falhar com "Output de change:status não é JSON válido. Stderr: <stderr>"
@@ -138,7 +138,7 @@ triggers:
 ### PASSO 3 — Verificar status de tarefas
 
 ```
-3.1. Construir caminho: specskill/changes/<CHANGE_NAME>/tasks.md
+3.1. Construir caminho: specskills/changes/<CHANGE_NAME>/tasks.md
 3.2. [CASO DE EXCEÇÃO] Se o arquivo não existe:
      - Prosseguir sem warning de tarefas (não toda change tem tasks.md)
      - Armazenar flag HAS_TASKS=false
@@ -174,18 +174,18 @@ triggers:
 ### PASSO 4 — Avaliar sincronização de delta specs
 
 ```
-4.1. Construir caminho: specskill/changes/<CHANGE_NAME>/specs/
+4.1. Construir caminho: specskills/changes/<CHANGE_NAME>/specs/
 4.2. [CASO DE EXCEÇÃO] Se o diretório não existe ou está vazio:
      - Armazenar flag HAS_DELTA_SPECS=false
      - Prosseguir para PASSO 5.
-4.3. Listar todos os arquivos .md em specskill/changes/<CHANGE_NAME>/specs/ (recursivo)
+4.3. Listar todos os arquivos .md em specskills/changes/<CHANGE_NAME>/specs/ (recursivo)
 4.4. [CASO DE EXCEÇÃO] Se nenhum .md encontrado:
      - Armazenar flag HAS_DELTA_SPECS=false
      - Prosseguir para PASSO 5.
 4.5. Armazenar flag HAS_DELTA_SPECS=true
 4.6. Para cada delta spec encontrado:
      4.6.1. Determinar a capability: extrair do caminho (ex: specs/auth/spec.md → capability="auth")
-     4.6.2. Construir caminho do main spec: specskill/specs/<capability>/spec.md
+     4.6.2. Construir caminho do main spec: specskills/specs/<capability>/spec.md
      4.6.3. [RESILIÊNCIA] Se main spec não existe:
             - Marcar como operação "ADD" (nova capability)
      4.6.4. Se main spec existe:
@@ -211,7 +211,7 @@ triggers:
      - Se "Arquivar sem sincronizar": armazenar SYNC_PERFORMED=false
 4.10. [SYNC] Invocar sincronização:
       - Usar Task tool com subagent_type="general-purpose"
-      - Prompt: "Use Skill tool to invoke specskill-sync-specs for change '<CHANGE_NAME>'. Delta spec analysis: <resumo do passo 4.7>"
+      - Prompt: "Use Skill tool to invoke specskills-sync-specs for change '<CHANGE_NAME>'. Delta spec analysis: <resumo do passo 4.7>"
       - [RESILIÊNCIA] Se a task falhar:
         - Warning: "Sincronização falhou: <motivo>. Prosseguindo com arquivamento."
         - Armazenar SYNC_PERFORMED=false, SYNC_ERROR=true
@@ -227,34 +227,34 @@ triggers:
 
 ```
 5.1. Criar diretório de archive (idempotente):
-     - `mkdir -p specskill/archive`
+     - `mkdir -p specskills/archive`
 5.2. [RESILIÊNCIA] Se mkdir falhar:
      - Falhar com "Não foi possível criar diretório de archive: <motivo>. Verifique permissões."
 5.3. Gerar nome do destino: YYYY-MM-DD-<CHANGE_NAME>
      - Usar data atual no fuso do sistema
-5.4. Construir caminho completo: specskill/archive/<DEST_NAME>
+5.4. Construir caminho completo: specskills/archive/<DEST_NAME>
 5.5. [CASO DE EXCEÇÃO] Se destino já existe:
      - Falhar com erro explícito:
-       "Já existe um archive com este nome: specskill/archive/<DEST_NAME>/
+       "Já existe um archive com este nome: specskills/archive/<DEST_NAME>/
         Opções:
         - Renomear o archive existente manualmente
         - Aguardar até amanhã para um nome de data diferente
         - Especificar um sufixo diferente para a change"
      - NÃO sobrescrever. NÃO renomear automaticamente. Parar execução.
 5.6. Executar movimentação:
-     - `mv specskill/changes/<CHANGE_NAME> specskill/archive/YYYY-MM-DD-<CHANGE_NAME>`
+     - `mv specskills/changes/<CHANGE_NAME> specskills/archive/YYYY-MM-DD-<CHANGE_NAME>`
 5.7. [RESILIÊNCIA] Se mv falhar:
      - Permissão negada: falhar com "Sem permissão para mover. Execute com permissões adequadas ou verifique ownership."
      - Dispositivo cheio: falhar com "Disco cheio. Libere espaço antes de arquivar."
      - Source não encontrado: falhar com "Diretório source desapareceu inesperadamente. Pode ter sido movido por outro processo."
      - Outro erro: falhar com "Falha ao mover (exit <code>): <stderr>"
-5.8. Validar que o destino existe e contém .specskill.yaml:
+5.8. Validar que o destino existe e contém .specskills.yaml:
      - Se destino não existe após mv: falhar com "Move aparentemente sucedeu mas destino não encontrado. Possível race condition."
-     - Se .specskill.yaml não existe no destino: warning "Arquivo .specskill.yaml não encontrado no archive. Verifique integridade manualmente."
+     - Se .specskills.yaml não existe no destino: warning "Arquivo .specskills.yaml não encontrado no archive. Verifique integridade manualmente."
 5.9. Prosseguir para PASSO 6.
 ```
 
-**Critério de conclusão**: Diretório movido com sucesso para `specskill/archive/YYYY-MM-DD-<CHANGE_NAME>/`.
+**Critério de conclusão**: Diretório movido com sucesso para `specskills/archive/YYYY-MM-DD-<CHANGE_NAME>/`.
 
 ---
 
@@ -267,7 +267,7 @@ triggers:
 
 **Change:** <CHANGE_NAME>
 **Schema:** <SCHEMA_NAME>
-**Archived to:** specskill/archive/YYYY-MM-DD-<CHANGE_NAME>/
+**Archived to:** specskills/archive/YYYY-MM-DD-<CHANGE_NAME>/
 **Specs:** <status de sync>
 **Artifacts:** <status>
 **Tasks:** <status>
@@ -305,7 +305,7 @@ triggers:
 
 ```bash
 # PASS — Valida antes de usar
-STATUS_JSON=$(npm run specskill:status -- --change "$NAME" --json 2>/tmp/change-err)
+STATUS_JSON=$(npm run specskills:status -- --change "$NAME" --json 2>/tmp/change-err)
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "ERRO: change:status falhou (exit $EXIT_CODE): $(cat /tmp/change-err)"
@@ -315,12 +315,12 @@ SCHEMA=$(echo "$STATUS_JSON" | jq -r '.schemaName // "desconhecido"')
 ARTIFACTS=$(echo "$STATUS_JSON" | jq -r '.artifacts // []')
 
 # FAIL — Acesso direto sem validação
-STATUS_JSON=$(npm run specskill:status -- --change "$NAME" --json)
+STATUS_JSON=$(npm run specskills:status -- --change "$NAME" --json)
 SCHEMA=$(echo "$STATUS_JSON" | jq -r '.schemaName')
 # Se .schemaName não existir, jq retorna "null" silenciosamente
 ```
 
-**Por que importa**: O specskill pode mudar formato de output, ter bugs, ou retornar erros em stdout. Acesso sem validação propaga "null" silenciosamente pelo resto do fluxo.
+**Por que importa**: O specskills pode mudar formato de output, ter bugs, ou retornar erros em stdout. Acesso sem validação propaga "null" silenciosamente pelo resto do fluxo.
 
 ---
 
@@ -374,22 +374,22 @@ fi
 
 ```bash
 # PASS — mv + validação pós-move
-mv "specskill/changes/$NAME" "specskill/archive/$DEST" 2>/tmp/mv-err
+mv "specskills/changes/$NAME" "specskills/archive/$DEST" 2>/tmp/mv-err
 if [ $? -ne 0 ]; then
   echo "ERRO: mv falhou: $(cat /tmp/mv-err)"
   exit 1
 fi
-if [ ! -d "specskill/archive/$DEST" ]; then
+if [ ! -d "specskills/archive/$DEST" ]; then
   echo "ERRO CRÍTICO: mv retornou sucesso mas destino não existe"
   exit 1
 fi
-if [ ! -f "specskill/archive/$DEST/.specskill.yaml" ]; then
-  echo "WARNING: .specskill.yaml ausente no archive"
+if [ ! -f "specskills/archive/$DEST/.specskills.yaml" ]; then
+  echo "WARNING: .specskills.yaml ausente no archive"
 fi
 
 # FAIL — cp + rm sem validação
-cp -r "specskill/changes/$NAME" "specskill/archive/$DEST"
-rm -rf "specskill/changes/$NAME"
+cp -r "specskills/changes/$NAME" "specskills/archive/$DEST"
+rm -rf "specskills/changes/$NAME"
 # Race condition: se cp falhar parcialmente, rm apaga o original
 ```
 
@@ -397,13 +397,13 @@ rm -rf "specskill/changes/$NAME"
 
 ---
 
-### P5 — Tratamento de stderr do specskill CLI
+### P5 — Tratamento de stderr do specskills CLI
 
 **Regra**: Sempre capturar stderr separadamente. Nunca mesclar stderr com stdout para parsing.
 
 ```bash
 # PASS — Stderr separado
-OUTPUT=$(npm run specskill:list -- --json 2>/tmp/change-stderr)
+OUTPUT=$(npm run specskills:list -- --json 2>/tmp/change-stderr)
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "ERRO: $(cat /tmp/change-stderr)"
@@ -411,7 +411,7 @@ if [ $EXIT_CODE -ne 0 ]; then
 fi
 
 # FAIL — Stderr no mesmo stream
-OUTPUT=$(npm run specskill:list -- --json 2>&1)
+OUTPUT=$(npm run specskills:list -- --json 2>&1)
 # Se houver warnings em stderr, elas contaminam o JSON
 ```
 
@@ -441,12 +441,12 @@ DEST_NAME="$(date)-${CHANGE_NAME}"
 | Anti-padrão | Consequência | Alternativa correta |
 |---|---|---|
 | Auto-selecionar change quando há múltiplas | Arquivar change errada, perda irreversível | Sempre usar AskUserQuestion com lista |
-| Ignorar stderr do specskill CLI | JSON corrompido por mensagens de warning, parse falha silenciosamente | Capturar stderr separado, verificar exit code |
+| Ignorar stderr do specskills CLI | JSON corrompido por mensagens de warning, parse falha silenciosamente | Capturar stderr separado, verificar exit code |
 | Usar cp+rm em vez de mv | Race condition pode destruir dados se cp falhar parcialmente | Usar mv atômico, validar pós-move |
 | Sobrescrever archive existente | Perda do archive anterior | Falhar com erro e sugerir ações manuais |
 | Sync silencioso de delta specs | Usuário perde controle sobre mudanças em specs | Sempre avaliar, mostrar diff, confirmar |
 | Tratar "null" do jq como valor válido | Propaga "null" como nome de schema, gera sumário confuso | Usar `// "fallback"` em todo jq -r |
-| Não validar pós-move | Diretório pode ter sumido por race condition com outro processo | Validar existência + presença de .specskill.yaml |
+| Não validar pós-move | Diretório pode ter sumido por race condition com outro processo | Validar existência + presença de .specskills.yaml |
 | Listar todas as tarefas incompletas sem limite | Output gigante se tasks.md tiver 100+ tarefas | Truncar em 10 itens com "... e N outras" |
 
 ---
@@ -456,7 +456,7 @@ DEST_NAME="$(date)-${CHANGE_NAME}"
 Antes de considerar o arquivamento completo, confirme:
 
 - [ ] Nome da change foi explicitamente confirmado pelo usuário (nunca auto-selecionado)
-- [ ] `npm run specskill:status -- --json` foi parseado com validação de estrutura
+- [ ] `npm run specskills:status -- --json` foi parseado com validação de estrutura
 - [ ] Warnings de artifacts incompletos foram apresentados com confirmação (se aplicável)
 - [ ] Warnings de tarefas incompletas foram apresentados com contagem exata (se aplicável)
 - [ ] Delta specs foram avaliados com diff normalizado (se existirem)
@@ -465,7 +465,7 @@ Antes de considerar o arquivamento completo, confirme:
 - [ ] `mv` foi usado (não cp+rm)
 - [ ] Pós-move validou existência do diretório destino
 - [ ] Sumário final inclui status de specs, artifacts e tasks com símbolos ✓/⚠/✗
-- [ ] Arquivo .specskill.yaml acompanhou a change para o archive
+- [ ] Arquivo .specskills.yaml acompanhou a change para o archive
 
 ---
 
@@ -473,10 +473,10 @@ Antes de considerar o arquivamento completo, confirme:
 
 | Precisa de... | Use a skill... |
 |---|---|
-| Sincronizar delta specs com main specs | `specskill-sync-specs` |
-| Criar uma nova change | `specskill-create-change` |
-| Listar changes disponíveis | CLI direto: `npm run specskill:list -- --json` |
-| Verificar status detalhado | CLI direto: `npm run specskill:status -- --json` |
+| Sincronizar delta specs com main specs | `specskills-sync-specs` |
+| Criar uma nova change | `specskills-create-change` |
+| Listar changes disponíveis | CLI direto: `npm run specskills:list -- --json` |
+| Verificar status detalhado | CLI direto: `npm run specskills:status -- --json` |
 
 ---
 
@@ -489,25 +489,25 @@ Antes de considerar o arquivamento completo, confirme:
 ```
 [Modelo]: Change "auth-refactor" encontrada. Verificando status...
 
-[CLI]: npm run specskill:status -- --change "auth-refactor" --json
+[CLI]: npm run specskills:status -- --change "auth-refactor" --json
 [Output]: {"schemaName": "default", "artifacts": [{"name": "plan", "status": "done"}, {"name": "impl", "status": "done"}]}
 
 [Modelo]: ✓ Todos os 2 artefatos completos.
 
-[Filesystem]: tasks.md não encontrado em specskill/changes/auth-refactor/
+[Filesystem]: tasks.md não encontrado em specskills/changes/auth-refactor/
 [Modelo]: Nenhum arquivo de tarefas encontrado.
 
-[Filesystem]: specskill/changes/auth-refactor/specs/ não encontrado
+[Filesystem]: specskills/changes/auth-refactor/specs/ não encontrado
 [Modelo]: Nenhum delta spec para sincronizar.
 
-[CLI]: mv specskill/changes/auth-refactor specskill/archive/2025-01-15-auth-refactor
+[CLI]: mv specskills/changes/auth-refactor specskills/archive/2025-01-15-auth-refactor
 
 [Modelo]:
 ## Archive Complete
 
 **Change:** auth-refactor
 **Schema:** default
-**Archived to:** specskill/archive/2025-01-15-auth-refactor/
+**Archived to:** specskills/archive/2025-01-15-auth-refactor/
 **Specs:** No delta specs
 **Artifacts:** ✓ All complete
 **Tasks:** No tasks file
@@ -518,7 +518,7 @@ Antes de considerar o arquivamento completo, confirme:
 ```
 [Modelo]: Nenhuma change especificada. Listando changes ativas...
 
-[CLI]: npm run specskill:list -- --json
+[CLI]: npm run specskills:list -- --json
 [Output]: {"changes": [{"name": "auth-refactor", "schema": "default"}, {"name": "api-v2", "schema": "extended"}]}
 
 [Modelo via AskUserQuestion]:
@@ -529,7 +529,7 @@ Qual arquivar?
 
 [Usuário]: api-v2
 
-[CLI]: npm run specskill:status -- --change "api-v2" --json
+[CLI]: npm run specskills:status -- --change "api-v2" --json
 [Output]: {"schemaName": "extended", "artifacts": [{"name": "plan", "status": "done"}, {"name": "impl", "status": "in-progress"}, {"name": "tests", "status": "pending"}]}
 
 [Modelo]:
@@ -560,7 +560,7 @@ Tarefas incompletas encontradas. Deseja arquivar mesmo assim?
 
 [Usuário]: Arquivar mesmo assim
 
-[Filesystem]: specskill/changes/api-v2/specs/ contém:
+[Filesystem]: specskills/changes/api-v2/specs/ contém:
   - specs/rate-limiting/spec.md (nova — main não existe)
   - specs/endpoints/spec.md (modificada — 12 linhas diferentes)
 
@@ -577,17 +577,17 @@ Delta specs precisam de sincronização. Deseja:
 
 [Usuário]: Sincronizar agora
 
-[Task tool]: Invoca specskill-sync-specs para api-v2...
+[Task tool]: Invoca specskills-sync-specs para api-v2...
 [Resultado]: Sync concluído com sucesso
 
-[CLI]: mv specskill/changes/api-v2 specskill/archive/2025-01-15-api-v2
+[CLI]: mv specskills/changes/api-v2 specskills/archive/2025-01-15-api-v2
 
 [Modelo]:
 ## Archive Complete
 
 **Change:** api-v2
 **Schema:** extended
-**Archived to:** specskill/archive/2025-01-15-api-v2/
+**Archived to:** specskills/archive/2025-01-15-api-v2/
 **Specs:** ✓ Synced to main specs
 **Artifacts:** ⚠ 2 incomplete (confirmed by user)
 **Tasks:** ⚠ 3/15 incomplete (confirmed by user)
@@ -601,7 +601,7 @@ Delta specs precisam de sincronização. Deseja:
 ### Cenário C — Falha de sistema (CLI não disponível)
 
 ```
-[CLI]: npm run specskill:list -- --json
+[CLI]: npm run specskills:list -- --json
 [Exit]: 127
 [Stderr]: command not found
 
@@ -610,21 +610,21 @@ Delta specs precisam de sincronização. Deseja:
 
 change:list CLI não está instalado ou não está no PATH.
 
-**Ação sugerida**: Verifique a instalação do specskill com `which specskill` ou consulte a documentação de instalação.
+**Ação sugerida**: Verifique a instalação do specskills com `which specskills` ou consulte a documentação de instalação.
 ```
 
 ### Cenário D — Destino de archive já existe
 ```
-[CLI]: ls specskill/archive/2025-01-15-auth-refactor
+[CLI]: ls specskills/archive/2025-01-15-auth-refactor
 [Output]: (diretório existe)
 
 [Modelo]:
 ## ERRO
 
-Já existe um archive com este nome: specskill/archive/2025-01-15-auth-refactor/
+Já existe um archive com este nome: specskills/archive/2025-01-15-auth-refactor/
 
 **Opções:**
-- Renomear o archive existente manualmente: `mv specskill/archive/2025-01-15-auth-refactor specskill/archive/2025-01-15-auth-refactor-v2`
+- Renomear o archive existente manualmente: `mv specskills/archive/2025-01-15-auth-refactor specskills/archive/2025-01-15-auth-refactor-v2`
 - Aguardar até amanhã para obter um nome de data diferente
 - Se a change original ainda existe em outro local, verifique se já foi arquivada
 

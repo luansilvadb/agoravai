@@ -8,7 +8,7 @@ export async function existsCommand(options: Record<string, string | boolean>): 
 
   if (!name) {
     console.error(MESSAGES.ERROR_INVALID_NAME());
-    console.error('Usage: specskill exists <name> [--json]');
+    console.error('Usage: specskills exists <name> [--json]');
     process.exit(EXIT_CODES.ERROR);
   }
 

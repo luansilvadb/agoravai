@@ -70,7 +70,7 @@ await repository.save({
   name: 'new-change',
   schema: 'spec-driven',
   created: new Date().toISOString(),
-  path: 'specskill/changes/new-change',
+  path: 'specskills/changes/new-change',
   artifacts: ['proposal', 'design'],
 });
 

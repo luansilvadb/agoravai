@@ -17,9 +17,9 @@ registerDefaults();
 const program = new Command();
 
 program
-  .name('specskill')
+  .name('specskills')
   .description('Spec-driven change management CLI')
-  .version('1.0.10');
+  .version('1.0.16');
 
 program
   .command('new')
@@ -30,7 +30,7 @@ program
   .option('-s, --schema <schema>', 'Schema type (spec-driven, minimal)', 'spec-driven')
   .option('--dry-run', 'Preview changes without applying')
   .action(async (type, name, options) => {
-    // Support both: 'specskill new <name>' and 'specskill new change <name>'
+    // Support both: 'specskills new <name>' and 'specskills new change <name>'
     if (type && type !== 'change') {
       console.error(`Invalid type '${type}'. Expected 'change'`);
       process.exit(1);

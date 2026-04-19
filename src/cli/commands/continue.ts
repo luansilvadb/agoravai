@@ -18,7 +18,7 @@ export async function continueCommand(options: Record<string, string | boolean>)
     if (changes.length === 0) {
       console.log(MESSAGES.INFO_NO_CHANGES());
     } else {
-      console.log('Active changes (use: npm run specskill:continue <name>):');
+      console.log('Active changes (use: npm run specskills:continue <name>):');
       for (const change of changes) {
         console.log(`  - ${change}`);
       }
@@ -43,7 +43,7 @@ export async function continueCommand(options: Record<string, string | boolean>)
 
   const getArtifactPath = (name: string): string => {
     return name === 'specs'
-      ? join(changePath, 'specs', 'spec.md')
+      ? join(changePath, 'specs', 'specs.md')
       : join(changePath, `${name}.md`);
   };
 
@@ -59,7 +59,7 @@ export async function continueCommand(options: Record<string, string | boolean>)
   let granularSpecs: string[] = [];
   if (pathExists(specsDir)) {
     const specDirs = await listDirs(specsDir);
-    granularSpecs = specDirs.filter(d => d !== 'spec.md' && pathExists(join(specsDir, d, 'spec.md')));
+    granularSpecs = specDirs.filter(d => d !== 'specs.md' && pathExists(join(specsDir, d, 'specs.md')));
   }
 
   if (missingArtifacts.length > 0) {
@@ -77,7 +77,7 @@ export async function continueCommand(options: Record<string, string | boolean>)
       console.log('');
       console.log(`Found ${granularSpecs.length} granular specs:`);
       for (const spec of granularSpecs.slice(0, 5)) {
-        console.log(`  - specs/${spec}/spec.md`);
+        console.log(`  - specs/${spec}/specs.md`);
       }
       if (granularSpecs.length > 5) {
         console.log(`  ... and ${granularSpecs.length - 5} more`);
@@ -85,9 +85,9 @@ export async function continueCommand(options: Record<string, string | boolean>)
     }
 
     console.log('');
-    console.log('Use npm run specskill:apply ' + changeName + ' to start implementing.');
+    console.log('Use npm run specskills:apply ' + changeName + ' to start implementing.');
     if (granularSpecs.length > 0) {
-      console.log('Or apply a specific spec: npm run specskill:apply ' + changeName + ' --spec <spec-id>');
+      console.log('Or apply a specific spec: npm run specskills:apply ' + changeName + ' --spec <spec-id>');
     }
   }
 }

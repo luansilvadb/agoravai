@@ -21,7 +21,7 @@ export async function archiveCommand(options: Record<string, string | boolean>):
       if (changes.length === 0) {
         console.log(MESSAGES.INFO_NO_CHANGES());
       } else {
-        console.log('Active changes (use: npm run specskill:archive <name>):');
+        console.log('Active changes (use: npm run specskills:archive <name>):');
         for (const change of changes) {
           console.log(`  - ${change}`);
         }

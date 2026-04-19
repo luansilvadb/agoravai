@@ -1,21 +1,21 @@
 ---
-name: specskill-propose
+name: specskills-propose
 version: 1.0.0
 description: >
-  Orquestra a criação completa de uma mudança SpecSkill — do scaffolding à geração
+  Orquestra a criação completa de uma mudança SpecSkills — do scaffolding à geração
   sequencial e resiliente de todos os artefatos (proposal, design, tasks).
-  Ative quando o usuário quiser propor algo novo e obter o pacote pronto para `/specskill:apply`.
+  Ative quando o usuário quiser propor algo novo e obter o pacote pronto para `/specskills:apply`.
 triggers:
   - "criar change"
-  - "nova proposta specskill"
+  - "nova proposta specskills"
   - "propor mudança"
-  - "specskill propose"
-  - "/specskill:propose"
+  - "specskills propose"
+  - "/specskills:propose"
 ---
 
-# SPECSKILL PROPOSE — Propostas completas e resilientes em um único passo
+# SPECSKILLS PROPOSE — Propostas completas e resilientes em um único passo
 
-> **Propósito**: Executar o pipeline de criação de um change SpecSkill de ponta a ponta,
+> **Propósito**: Executar o pipeline de criação de um change SpecSkills de ponta a ponta,
 > garantindo que a topologia de dependências seja resolvida e os artefatos sobrevivam
 > a falhas de sistema, ambiguidade e estados inconsistentes.
 
@@ -36,8 +36,8 @@ triggers:
 - Recuperar um change interrompido (se `applyRequires` ainda não estiver completo)
 
 ### ❌ NÃO ativar para:
-- Executar as tarefas de implementação contidas no `tasks.md` → use `specskill-apply`
-- Alterar o schema global do SpecSkill → responda diretamente com orientação
+- Executar as tarefas de implementação contidas no `tasks.md` → use `specskills-apply`
+- Alterar o schema global do SpecSkills → responda diretamente com orientação
 - Modificar um artefato específico isolado (ex: "ajusta só o design.md") → edite o arquivo diretamente
 
 ---
@@ -51,7 +51,7 @@ triggers:
 - Tratamento de erros de I/O, JSON malformado e colisão de nomes
 
 **Delega:**
-- Execução das tasks → `specskill-apply`
+- Execução das tasks → `specskills-apply`
 - Decisões de arquitetura de negócio complexas → o usuário (via `AskUserQuestion`)
 
 ---
@@ -59,18 +59,18 @@ triggers:
 ## Protocolo de Execução
 
 1. **Extrair Intenção** — Leia o input do usuário. Se vazio ou ambíguo a ponto de inviabilizar o nome do change, use `AskUserQuestion`. Derive o nome `<name>` em `kebab-case`.
-2. **Scaffoldar com Segurança** — Execute `npm run specskill:new "<name>"`. Capture stderr. Se indicar que o change já existe, pergunte ao usuário se deseja sobrescrever/continuar ou criar um novo.
-3. **Mapear Topologia** — Execute `npm run specskill:status "<name>" --json`. Faça o parse do JSON. Se o parse falhar (JSON inválido), aborte e mostre a saída bruta do comando. Extraia `applyRequires` e a lista `artifacts`.
+2. **Scaffoldar com Segurança** — Execute `npm run specskills:new "<name>"`. Capture stderr. Se indicar que o change já existe, pergunte ao usuário se deseja sobrescrever/continuar ou criar um novo.
+3. **Mapear Topologia** — Execute `npm run specskills:status "<name>" --json`. Faça o parse do JSON. Se o parse falhar (JSON inválido), aborte e mostre a saída bruta do comando. Extraia `applyRequires` e a lista `artifacts`.
 4. **Iniciar Loop de Geração** — Use `TodoWrite` para listar os artefatos pendentes. Ordene a execução respeitando o campo `dependencies` de cada artefato (só processe um se seu status for `ready`).
 5. **Gerar Artefato (Sub-passo crítico):**
-   a. Execute `npm run specskill:instructions "<name>" <artifact-id> --json`.
+   a. Execute `npm run specskills:instructions "<name>" <artifact-id> --json`.
    b. Faça o parse extraindo `template`, `instruction`, `outputPath` e `dependencies`. Descarte `context` e `rules` da memória de saída.
    c. Leia os arquivos das dependências apontadas no passo anterior.
    d. Escreva o arquivo em `outputPath` usando `template` como esqueleto.
    e. **Validação de I/O**: Tente ler o arquivo recém-escrito. Se falhar, reescreva. Se falhar novamente, aborte o pipeline reportando erro de permissão/I/O.
-6. **Atualizar Estado** — Após geração bem-sucedida, reexecute `npm run specskill:status "<name>" --json`. Atualize o `TodoWrite`.
+6. **Atualizar Estado** — Após geração bem-sucedida, reexecute `npm run specskills:status "<name>" --json`. Atualize o `TodoWrite`.
 7. **Condição de Parada** — Encerre o loop quando todos os IDs listados em `applyRequires` tiverem `status: "done"` no JSON atual.
-8. **Apresentar Resultado** — Execute `npm run specskill:status "<name>"` (sem `--json` para saída amigável) e entregue o resumo final.
+8. **Apresentar Resultado** — Execute `npm run specskills:status "<name>"` (sem `--json` para saída amigável) e entregue o resumo final.
 
 ---
 
@@ -117,7 +117,7 @@ echo "$ARTIFACT_CONTENT" > "$OUTPUT_PATH"
 # avança para o próximo passo sem checar...
 ```
 
-**Por que importa**: Sistemas de arquivos em rede ou limites de inode podem falhar silenciosamente na gravação, resultando em um change "pronto" que quebra no `/specskill:apply`.
+**Por que importa**: Sistemas de arquivos em rede ou limites de inode podem falhar silenciosamente na gravação, resultando em um change "pronto" que quebra no `/specskills:apply`.
 
 ---
 
@@ -127,13 +127,13 @@ echo "$ARTIFACT_CONTENT" > "$OUTPUT_PATH"
 
 ```bash
 # PASS — Verifica antecipadamente e delega a decisão
-if npm run specskill:status "$NAME" --json &>/dev/null; then
+if npm run specskills:status "$NAME" --json &>/dev/null; then
   echo "CHANGE_EXISTS"
   # Lógica: trigger AskUserQuestion para o modelo
 fi
 
 # FAIL — Força a criação e sobrescreve
-npm run specskill:new "$NAME" --force
+npm run specskills:new "$NAME" --force
 ```
 
 **Por que importa**: Dados de proposta anteriores são difíceis de reconstruir. A decisão de sobrescrever um change em andamento deve ser sempre humana.
@@ -157,7 +157,7 @@ artifact_content = f"# Design\n\n## Stack\n\nO módulo será escrito em {context
 artifact_content = f"# Design\n\n<project_context>{context}</project_context>\n\n<rules>{rules}</rules>..."
 ```
 
-**Por que importa**: Vazar metadados internos polui o artefato final, confunde o desenvolvedor humano e quebra o contrato de limpeza do SpecSkill.
+**Por que importa**: Vazar metadados internos polui o artefato final, confunde o desenvolvedor humano e quebra o contrato de limpeza do SpecSkills.
 
 ---
 
@@ -166,8 +166,8 @@ artifact_content = f"# Design\n\n<project_context>{context}</project_context>\n\
 | Anti-padrão | Consequência | Alternativa correta |
 | :--- | :--- | :--- |
 | Executar geração de artefatos em paralelo | Quebra de dependências, referências circulares, arquivos corrompidos | Loop estrito verificando `status: "ready"` antes de cada write |
-| Não tratar stderr do `npm run specskill:new` | O diretório não é criado, mas o protocolo tenta gerar artefatos, causando cascade failure | Capturar `$?` e `stderr` após o scaffold; abortar se não for zero |
-| Preencher template com prosa genérica ("Preencha aqui") | O `/specskill:apply` falha por falta de dados concretos nas tasks | Extrair entidades e ações reais do input do usuário para popular o template |
+| Não tratar stderr do `npm run specskills:new` | O diretório não é criado, mas o protocolo tenta gerar artefatos, causando cascade failure | Capturar `$?` e `stderr` após o scaffold; abortar se não for zero |
+| Preencher template com prosa genérica ("Preencha aqui") | O `/specskills:apply` falha por falta de dados concretos nas tasks | Extrair entidades e ações reais do input do usuário para popular o template |
 | Ignorar o campo `dependencies` do JSON de instruções | Gerar um design.md sem ter lido o proposal.md resulta em contradições | Ler os caminhos listados em `dependencies` no sistema de arquivos antes de iniciar o render |
 
 ---
@@ -177,8 +177,8 @@ artifact_content = f"# Design\n\n<project_context>{context}</project_context>\n\
 Antes de declarar o processo concluído, confirme:
 
 - [ ] Input do usuário validado ou nome derivado com sucesso
-- [ ] Comando `npm run specskill:new` executado sem erros de colisão
-- [ ] JSON de `npm run specskill:status` parseado com validação de chaves obrigatórias
+- [ ] Comando `npm run specskills:new` executado sem erros de colisão
+- [ ] JSON de `npm run specskills:status` parseado com validação de chaves obrigatórias
 - [ ] Loop executou respeitando a ordem estrita de `dependencies`
 - [ ] Para cada artefato: `instructions` parseado e `<context>`/`<rules>` omitidos do output
 - [ ] Para cada artefato: arquivo escrito e validado (não vazio, existe no path)
@@ -191,6 +191,6 @@ Antes de declarar o processo concluído, confirme:
 
 | Precisa de... | Use a skill... |
 | :--- | :--- |
-| Executar as tasks geradas nesta proposta | `specskill-apply` |
+| Executar as tasks geradas nesta proposta | `specskills-apply` |
 | Formatar tabelas ou estruturas complexas nos artefatos | `markdown-advanced` |
-| Debugar falhas no binário do SpecSkill | Responda diretamente (diagnóstico de CLI) |
+| Debugar falhas no binário do SpecSkills | Responda diretamente (diagnóstico de CLI) |

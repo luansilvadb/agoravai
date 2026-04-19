@@ -1,6 +1,6 @@
 import { readFile, writeFile, pathExists, ensureDir } from './fs-utils.js';
 
-export const GLOBAL_CONFIG_PATH = 'specskill/.specskill.global.yaml';
+export const GLOBAL_CONFIG_PATH = 'specskills/.specskills.global.yaml';
 
 interface GlobalConfig {
   version: string;
@@ -17,8 +17,8 @@ const DEFAULT_CONFIG: GlobalConfig = {
 };
 
 function serializeConfig(config: GlobalConfig): string {
-  return `# SpecSkill Global Configuration
-# File: .specskill.global.yaml
+  return `# SpecSkills Global Configuration
+# File: .specskills.global.yaml
 version: ${config.version}
 lastArchiveId: ${config.lastArchiveId}
 defaultSchema: ${config.defaultSchema}
@@ -70,7 +70,7 @@ export async function getGlobalConfig(): Promise<GlobalConfig> {
 }
 
 export async function saveGlobalConfig(config: GlobalConfig): Promise<void> {
-  await ensureDir('specskill');
+  await ensureDir('specskills');
   await writeFile(GLOBAL_CONFIG_PATH, serializeConfig(config));
 }
 

@@ -1,9 +1,9 @@
 import { join } from 'path';
 
 export const CONFIG = {
-  CHANGES_DIR: 'specskill/changes',
-  ARCHIVE_DIR: 'specskill/archive',
-  SPECS_DIR: 'specskill/specs',
+  CHANGES_DIR: 'specskills/changes',
+  ARCHIVE_DIR: 'specskills/archive',
+  SPECS_DIR: 'specskills/specs',
   DEFAULT_SCHEMA: 'spec-driven',
   SCHEMAS: {
     'spec-driven': {
@@ -38,5 +38,5 @@ export function formatArchiveId(id: number): string {
 }
 
 export function getConfigPath(name: string): string {
-  return join(getChangePath(name), '.specskill.yaml');
+  return join(getChangePath(name), '.specskills.yaml');
 }
